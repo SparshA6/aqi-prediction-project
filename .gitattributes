@@ -1,0 +1,2 @@
+# Frozen runs verify source files by SHA-256, so git must never rewrite line endings.
+* -text
