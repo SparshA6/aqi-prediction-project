@@ -1,0 +1,9 @@
+city,portal_state,portal_city,climatic_zone,min_lon,min_lat,max_lon,max_lat,n_stations_in_metadata
+Delhi,Delhi,Delhi,IGP_plains_stagnation_prone,76.7,28.3,77.5,29.0,40
+Lucknow,Uttar Pradesh,Lucknow,IGP_plains_stagnation_prone,80.79,26.67,81.11,27.01,7
+Kolkata,West Bengal,Kolkata,humid_eastern_delta,88.24,22.4,88.51,22.73,7
+Mumbai,Maharashtra,Mumbai,coastal_ventilated_west,72.71,18.8,73.04,19.48,30
+Chennai,Tamil Nadu,Chennai,coastal_tropical_southeast,80.01,12.81,80.42,13.32,9
+Bengaluru,Karnataka,Bengaluru,upland_plateau_mild,77.39,12.68,77.78,13.13,14
+Hyderabad,Telangana,Hyderabad,semi_arid_deccan,78.03,17.25,78.67,17.69,14
+Jaipur,Rajasthan,Jaipur,semi_arid_dust,75.63,26.69,75.94,27.06,6

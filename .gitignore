@@ -1,0 +1,25 @@
+# Environments / vendored deps
+.venv-gpu/
+.deps/
+.pytest_cache/
+__pycache__/
+*.pyc
+
+# Data and generated results (large, regenerable from the pipeline + raw sources)
+data/
+results/
+logs/
+/aligned_dataset.csv
+
+# Claude Code session-local state
+.claude/
+
+# Scratch / backup snapshots
+work/
+
+# Built demo distribution (derived artifact, not source)
+share/
+
+# Trained model weights that occasionally land outside results/
+*.pt
+*.npz

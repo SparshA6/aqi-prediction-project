@@ -1,0 +1,9 @@
+# Tested direct dependencies on Python 3.13.3; recorded 10 October 2026.
+earthengine-api==1.7.43
+pandas==2.2.3
+numpy==2.1.2
+scikit-learn==1.6.0
+openpyxl==3.1.5
+playwright==1.60.0
+xgboost==3.4.1
+torch==2.10.0
