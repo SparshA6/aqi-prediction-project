@@ -225,7 +225,7 @@ def draw_cover(c, doc):
     c.setFont("Times-Roman", 15)
     c.drawCentredString(cx, 402, "Results, Discussion and Inference")
     c.setFont("Times-Roman", 10.5)
-    c.drawCentredString(cx, 385, "ML Lab Project - 20 October 2026 | Revised 2 November 2026")
+    c.drawCentredString(cx, 385, "ML Lab Project - 2 November 2026")
     c.setFont("Times-Italic", 10.5)
     c.drawCentredString(cx, 368, "Including same-day estimation and next-day forecasting")
 
