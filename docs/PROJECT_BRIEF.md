@@ -273,3 +273,54 @@ Accuracy (test RMSE, chrono / LOCO / season-CV): SW-w7: GRU 84.4/55.4/51.7, Unif
 
 What the weights look like (descriptive only, NOT yet tested for faithfulness): temporal attention is concentrated on the target day and the day before (d-0 ~0.29-0.38, d-1 ~0.20, d-5/d-4 lowest, small bump at d-6), normalised entropy 0.65-0.78, mean profile very stable across seeds (r 0.90-0.99) but the weight varies a lot row to row (std ~0.2). Feature attention is close to uniform (entropy 0.95-0.97): temp_c is highest (1.4-1.9x uniform; likely a season proxy), then NO2, pressure, wind direction, wspd; rh and the missing-indicators lowest -- although humidity is physically expected to matter; seed-to-seed agreement of the feature profile is only r 0.64-0.86.
 Implications for RQ: (1) the attention-weight profiles are candidate "explanations" to be compared with SHAP / permutation / leave-one-out / LIME / TCAV; (2) the feature gate is computed FROM the inputs, so its weights are not automatically an importance measure -- a good test of the RQ; (3) since the Uniform/GRU controls perform about as well, the honest expectation is that attention will turn out to be at best a partial explanation; do not pre-write that conclusion.
+
+
+### 6k. Spatiotemporal neighbouring-cell patch model (2026-09-20ish)
+
+Code: `src/models/spatial_data.py` (patch builder, checked against the single-cell windows: centre cell == 6i/6j inputs exactly), `seq_models.SpatialNet`, `run_spatial.py`, `summarize_spatial.py`; tables in `docs/SPATIAL_MODEL_RESULTS.md`; chrono models saved in `results/spatial/models/` for the XAI stage.
+Setup: 3x3 patch of grid cells around the station (stride 3, ~10 km spacing -- stride 1 would just duplicate the native 0.03 deg grid against ERA5-Land's coarser ~0.1 deg resolution), each cell its own 7-day window, one GRU shared across cells, two-level attention (temporal pooling per cell, then spatial pooling across the patch, masked for absent/coastal cells). Cells are given only a relative offset (not lat/lon), so the model can attend to *where* a cell is without memorising which station it is. Variants: `S-Uniform` (attention-ablated control, uniform over days and cells), `S-TA`, `S-SA`, `S-SA`, `S-TA+SA`. loco is omitted from the summary table -- Mumbai's fold has incomplete coverage.
+
+Test RMSE (chrono / season-CV mean of 4 folds), single-cell vs. 3x3 patch, best-of-GRU/TA kept from 6i/6j for reference:
+
+| input | single cell: GRU | single cell: Uniform | single cell: TA | patch: S-Uniform | patch: S-TA | patch: S-SA | patch: S-TA+SA |
+|---|---|---|---|---|---|---|---|
+| SW-w7 | 84.4 / 51.7 | 89.6 / 53.7 | 84.1 / 52.8 | 82.7 / 53.8 | 81.7 / 53.3 | 77.2 / 53.3 | 81.0 / 52.6 |
+| SWT-w7 | 77.9 / 50.6 | 75.3 / 52.2 | 77.3 / 51.6 | 76.1 / 53.0 | 71.9 / 50.3 | **66.9** / 51.4 | 68.9 / 50.4 |
+
+Findings: (1) the neighbourhood patch clearly helps on chrono (best patch model beats the best single-cell model by 7-11 RMSE on both input sets; S-SA on SWT-w7 is the best model of either stage at 66.9), but the gain mostly disappears on season-CV (all single-cell and patch variants sit within ~3.5 RMSE of each other); (2) **spatial** attention (S-SA) consistently beats temporal-only (S-TA) and beats learning both at once (S-TA+SA) on chrono -- adding the neighbourhood helps more than adding temporal attention did in 6j; (3) descriptive attention: spatial weights lean toward the south/south-east cells and away from north/north-west (e.g. SWT-w7/S-TA+SA: south-east 0.274 vs. north-west 0.037, both far from uniform 0.111, entropy 0.846) -- a candidate signature of prevailing wind/transport direction, worth checking physically before calling it an explanation; temporal attention stays concentrated on d-0/d-1 as in 6j. (4) Caveat: untuned, 3 seeds, no CIs -- same caveats as 6i/6j, plus the loco gap for Mumbai.
+Implication for RQ: this is the strongest accuracy case so far for "attention helps" (S-SA on chrono), but it is the *spatial* half of attention doing the work, not the temporal half -- the faithfulness audit needs to test the spatial and temporal attention mechanisms separately, not just as a single "attention" block.
+
+
+### 6l. Year-holdout and next-day forecast evaluations (2026-10)
+
+Separate from the main faithfulness study, these ask "how good is the frozen pipeline at forecasting, not just same-day estimation" using strict train/test year splits (`results/year_holdout/`, `results/forecast_2025/`, `results/forecast_2026/`; summarised in `docs/AQI_Prediction_Full_Project_Report.docx`, independently re-derived against the raw CSVs and confirmed to match).
+
+- **2023 -> 2024 year-holdout** (same-day estimation, tabular Ridge with AQI-history lags): test MAE 23.00, RMSE 32.81, R2 0.892 (n=28,803).
+- **2025 next-day forecast** (horizon = 1 day, excludes target-day observed AQI/satellite/weather; GRU, 28-day window): test RMSE 32.52, MAE 21.86, R2 0.887 (n=30,263).
+- **2026 next-day forecast, weather-aware candidate** (XGBoost residual-forecast using Open-Meteo's Previous Runs API for earlier-issued weather, 5-day lag): test RMSE 30.27, MAE 19.35, R2 0.848 (n=20,086); block-bootstrap (2,000 calendar-week draws) used for uncertainty.
+- **Abrupt-change (>=50 AQI) detection, "all" row**: the weather-aware XGBoost reaches 18.23% recall / 52.82% precision vs. 6.65% recall / 57.46% precision for the frozen GRU -- better recall at a real precision cost, not a clean win.
+- **Severe-AQI (>=300) and abrupt-change alert classifiers** (`results/event_alerts/`): fit on October 2024 GRU predictions, thresholds fixed on Nov-Dec 2024, evaluated once on 2025 only. Both candidates **failed their predeclared promotion rule** and were **not deployed**: on severe AQI the existing rule had 82.9% recall / 83.7% precision vs. the candidate's 64.9% / 88.4%; on abrupt change the existing rule had 4.3% recall vs. the candidate's 0.2%. The frozen GRU default is unchanged.
+
+Takeaway: forecasting degrades gracefully from same-day estimation (R2 0.892 -> 0.887 -> 0.848 going 2024 same-day -> 2025 next-day -> 2026 next-day-with-weather), weather awareness helps the point forecast but does not clearly help abrupt-change detection, and two honestly-tested alert-classifier ideas were rejected rather than kept because they looked promising.
+
+
+### 6m. Corrected leave-one-city-out (LOCO) cross-city transfer (2026-10-21)
+
+8-fold LOCO, summarised with **equal weight per held-out city** (city-macro RMSE, not row-weighted -- avoids letting Delhi's row count dominate). Source: `results/city_transfer/`, `docs/Followthrough_2026-10-21.md`.
+SWT-w7: spatial **S-TA+SA 54.16** city-macro RMSE vs. spatial **Uniform 57.19** -- improves 5 of 8 held-out cities. Sequence **TA 55.23** vs. sequence **Uniform 55.11** -- no improvement on average.
+Reading together with 6k: the *spatial* model's attention transfers to unseen cities better than the *sequence* model's temporal-only attention does -- consistent with 6k's finding that spatial attention is doing more real work than temporal attention. Still only cross-city transfer of accuracy, not evidence about faithfulness.
+
+
+### 6n. Prospective (forward-looking) evaluation pipeline (2026-10 onward)
+
+A second, independent evaluation track, run live rather than on archived years: ground CPCB exports and Open-Meteo weather are collected day by day for the window **13 October - 31 December 2026**, and a prediction is only ever recorded as an immutable record *before* that UTC day's target closes (`src/prospective_tracker.py`, commands: `ground` / `weather` / `record` / `status`). This is meant to be a clean prospective test with no possibility of hindsight leakage, as a complement to the historical holdouts in 6l.
+- **Ground collection**: `src/cpcb_downloader.py --auto --year 2026 --months <N> --output-root data/raw/cpcb_prospective` (CAPTCHA-gated, run manually/periodically). As of 2026-11-02: 104/107 configured stations have exports (3 Mumbai stations -- Vasai West, Vile Parle West, Chhatrapati Shivaji Intl. Airport T2 -- are not offered by the CPCB portal under any name and are a permanent gap, not a bug), 2,581 usable station-days through 2026-10-30.
+- **Weather provenance**: every snapshot saves a `retrieval_audit.json` (per-city request/response time, URL, raw-response SHA-256) plus a `single_run_audit.json` that separately requests the named Open-Meteo Previous-Runs model run once the 24-hour-lead weather is complete, without claiming the two sources are proven identical (Open-Meteo's Single-Runs and Previous-Runs APIs answer different questions -- see `docs/Followthrough_2026-10-21.md`).
+- **Recording guard**: `record` refuses to write anything unless a city has all 24 eligible earlier-issued hourly forecasts for the target day -- as of 2026-11-02 this is still 0/8 cities, so **0 prospective records exist yet**. This is expected (the window just opened and Open-Meteo hasn't published far enough ahead), not a failure.
+- **Ensemble candidate**: a 30% GRU / 70% archived-weather XGBoost blend is frozen in `results/ensemble/runs/prospective-oct13-v1`, its weight chosen on October 2025 only; it has **no fresh prospective score yet** and does not replace the verified GRU default.
+No prospective number exists to report until records accumulate; the earliest possible read-out is after enough days post-13 October have both a recorded prediction and an observed outcome.
+
+
+### 6o. Dashboard (`src/dashboard/`)
+
+Flask app with a public static demo distribution (`share/`). Clearly separates three things that are easy to conflate: (1) same-day estimates, (2) historical next-day backtests (6l), and (3) the live prospective evaluation (6n, currently unscored). On opening or changing a station/city the comparison date follows that selection's latest available day. Collection/research detail lives in files and the API, not the homepage.
