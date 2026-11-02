@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import pandas as pd
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.pagesizes import A4
@@ -127,7 +128,7 @@ def section_h(text):
     return Paragraph(text, section_heading)
 
 
-def table_block(label, title, headers, rows, widths, footnote, groups=None):
+def table_block(label, title, headers, rows, widths, footnote, groups=None, keep=True):
     data = [[Paragraph(v, cellhead if i == 0 else numhead) for i, v in enumerate(headers)]]
     for row in rows:
         if isinstance(row, str):
@@ -151,13 +152,13 @@ def table_block(label, title, headers, rows, widths, footnote, groups=None):
     if groups:
         for row_idx in groups:
             rules.append(("SPAN", (0, row_idx), (-1, row_idx)))
+            rules.append(("NOSPLIT", (0, row_idx), (-1, row_idx + 1)))
             rules.append(("LINEABOVE", (0, row_idx), (-1, row_idx), 0.25, colors.black))
     table.setStyle(TableStyle(rules))
-    return KeepTogether([
-        Paragraph(f"<b>Table {label}</b> {title}", caption),
-        table,
-        Paragraph(footnote, note),
-    ])
+    # keepWithNext on the caption would hold a splittable table together as one block.
+    style = caption if keep else ParagraphStyle("SplitTableCaption", parent=caption, keepWithNext=False)
+    parts = [Paragraph(f"<b>Table {label}</b> {title}", style), table, Paragraph(footnote, note)]
+    return KeepTogether(parts) if keep else parts
 
 
 def paired_rmse_figure():
@@ -184,6 +185,25 @@ def paired_rmse_figure():
     ])
 
 
+def attention_stability_rows():
+    """Every variant, both input sets, all protocols, read from the saved analysis."""
+    gains = pd.read_csv(ROOT / "results" / "attention_stability" / "gains.csv")
+    if len(gains) != 36:
+        raise ValueError("Expected 36 attention comparisons")
+
+    def cell(protocol, model, feature_set):
+        r = gains[(gains.protocol == protocol) & (gains.model == model) & (gains.feature_set == feature_set)].iloc[0]
+        return f"{r.gain:+.2f} [{r.lower:.2f}, {r.upper:.2f}]"
+
+    rows = []
+    for protocol, label in [("chrono", "Chronological, November-December 2023"), ("loco", "Leave-one-city-out, eight cities"), ("season_cv", "Interleaved-month folds, four folds")]:
+        rows.append(label)
+        for family, model, name in [("Sequence", "TA", "TA"), ("Sequence", "FA", "FA"), ("Sequence", "TA+FA", "TA + FA"),
+                                    ("Spatial patch", "S-TA", "S-TA"), ("Spatial patch", "S-SA", "S-SA"), ("Spatial patch", "S-TA+SA", "S-TA + S-SA")]:
+            rows.append([family, name, cell(protocol, model, "SWT-w7"), cell(protocol, model, "SW-w7")])
+    return rows
+
+
 def draw_cover(c, doc):
     c.saveState()
     cx = PAGE_W / 2
@@ -205,7 +225,7 @@ def draw_cover(c, doc):
     c.setFont("Times-Roman", 15)
     c.drawCentredString(cx, 402, "Results, Discussion and Inference")
     c.setFont("Times-Roman", 10.5)
-    c.drawCentredString(cx, 385, "ML Lab Project - 20 October 2026 | Revised 21 October 2026")
+    c.drawCentredString(cx, 385, "ML Lab Project - 20 October 2026 | Revised 2 November 2026")
     c.setFont("Times-Italic", 10.5)
     c.drawCentredString(cx, 368, "Including same-day estimation and next-day forecasting")
 
@@ -301,9 +321,9 @@ def make_story():
         ),
         p("For observed AQI of 301-400, the weather model's mean prediction error was -38.51 points; for 401-500 it was -44.36 points. Only 94 observations were in the latter band, so that estimate is less stable. These severe-day errors matter even though the model led the average-error metrics."),
         h("A.4 Attention accuracy and faithfulness"),
-        p("The corrected attention study used a separate November-December 2023 chronological test of 5,434 station-days. Within the seven-day sequence family, temporal attention (TA), feature attention (FA), and their combination all had higher RMSE than uniform weighting. Within the spatial-patch family, spatial attention (S-SA) reduced RMSE from 75.328 to 65.836 (Table 4)."),
+        p("The corrected attention study used a separate November-December 2023 chronological test of 5,434 station-days. Table 4 reports the SWT-w7 inputs (satellite, weather and day of year); Section A.6 shows that several outcomes change on SW-w7, which omits day of year. On SWT-w7, within the seven-day sequence family, temporal attention (TA), feature attention (FA), and their combination all had higher RMSE than uniform weighting. Within the spatial-patch family, spatial attention (S-SA) reduced RMSE from 75.328 to 65.836 (Table 4)."),
         table_block(
-            "4", "Corrected attention experiment, November-December 2023.",
+            "4", "Corrected attention experiment, November-December 2023, SWT-w7 inputs.",
             ["Model family", "Variant", "Station-<br/>days", "RMSE"],
             [
                 ["Seven-day sequence", "Uniform weights", "5,434", "78.361"],
@@ -317,7 +337,7 @@ def make_story():
             ], [120, 184, 74, 67],
             "RMSE is in AQI points. Compare variants only within the same model family.",
         ),
-        p("Faithfulness was audited on 300 sampled rows for each corrected FA and S-SA checkpoint. Table 5 reports row-weighted mean Spearman agreement between each ranking and fixed-model input-replacement sensitivity. SHAP exceeded attention under both replacement methods for both models; the size of the gap depended on the replacement method."),
+        p("Faithfulness was audited on 300 sampled rows for each corrected SWT-w7 FA and S-SA checkpoint; no SW-w7 checkpoint has been audited. Table 5 reports row-weighted mean Spearman agreement between each ranking and fixed-model input-replacement sensitivity. SHAP exceeded attention under both replacement methods for both models; the size of the gap depended on the replacement method."),
         table_block(
             "5", "Ranking agreement with input-replacement sensitivity.",
             ["Model", "Replacement method", "Attention r", "SHAP r", "Rows"],
@@ -346,10 +366,19 @@ def make_story():
             ], [88, 122, 78, 82, 75],
             "MAE and RMSE are AQI points. City-macro averages give each held-out city equal weight; pooled RMSE weights station-days. Compare attention only with its within-family Uniform control.",
         ),
-        h("A.6 Development-only event alerts"),
-        p("A separate 2025 historical test examined severe AQI (at least 300) and abrupt absolute daily change (at least 50 AQI points). Alert classifiers were fitted on October 2024 GRU predictions and thresholds chosen on November-December 2024, before the 2025 evaluation. Table 7 compares them with direct thresholds on the frozen forecast. Severe-event precision rose from 83.7% to 88.4%, but recall fell from 82.9% to 64.9%. For abrupt changes, the candidate produced only nine alerts and recall fell from 4.25% to 0.20%; its 88.9% precision is therefore not evidence of better detection. Neither classifier met the prespecified promotion check, and neither was deployed."),
+        h("A.6 Attention across input sets"),
+        p("The comparisons above use one input set. To test whether their conclusions depend on that choice, every attention variant was compared with its within-family Uniform control on both input sets and all three protocols, from the saved predictions and without retraining (Table 7). Some outcomes reversed. In the chronological test, S-SA gained 9.49 AQI points on SWT-w7 but lost 3.58 on SW-w7, and FA lost 3.92 on SWT-w7 but gained 3.59 on SW-w7. Sequence TA gained 1.73 in LOCO on SW-w7 but showed no gain on SWT-w7. The most consistent result was S-TA+SA in LOCO, which gained about 3 points on both input sets, although it showed no chronological gain on either."),
+        *table_block(
+            "7", "RMSE gain of each attention variant over its within-family Uniform control.",
+            ["Family", "Variant", "SWT-w7 gain<br/>[95% interval]", "SW-w7 gain<br/>[95% interval]"],
+            attention_stability_rows(), [85, 80, 140, 140],
+            "Gain is Uniform RMSE minus attention RMSE in AQI points, so positive values favour attention; folds are weighted equally. Intervals are paired calendar-week block bootstraps. They cover test-week sampling only, not training-seed variation, and are unadjusted across the 36 comparisons.",
+            groups=[1, 8, 15], keep=False,
+        ),
+        h("A.7 Development-only event alerts"),
+        p("A separate 2025 historical test examined severe AQI (at least 300) and abrupt absolute daily change (at least 50 AQI points). Alert classifiers were fitted on October 2024 GRU predictions and thresholds chosen on November-December 2024, before the 2025 evaluation. Table 8 compares them with direct thresholds on the frozen forecast. Severe-event precision rose from 83.7% to 88.4%, but recall fell from 82.9% to 64.9%. For abrupt changes, the candidate produced only nine alerts and recall fell from 4.25% to 0.20%; its 88.9% precision is therefore not evidence of better detection. Neither classifier met the prespecified promotion check, and neither was deployed."),
         table_block(
-            "7", "Historical 2025 alert test; development candidates are not deployed.",
+            "8", "Historical 2025 alert test; development candidates are not deployed.",
             ["Event", "Method", "Events", "Alerts", "Precision", "Recall"],
             [
                 ["AQI >= 300", "Frozen forecast threshold", "2,975", "2,948", "83.68%", "82.92%"],
@@ -367,18 +396,18 @@ def make_story():
         p("The weather candidate flagged roughly three times as many sharp changes as GRU (799 versus 268), which helps explain its higher recall and lower precision. Its underprediction in high-AQI bands shows why a lower overall RMSE can coexist with weak performance on severe episodes. Rare extremes, incomplete station coverage, and different city weights make the pooled result insufficient as an operational safety criterion. Delhi contributed 12,387 of 30,263 rows in the 2025 GRU test (40.9%), so that pooled metric gives Delhi substantial influence."),
         p("The promotion rule required both sharp-change recall and precision to be at least as high as GRU's, in addition to positive paired RMSE gains. XGBoost missed the precision condition (52.82% versus 57.46%), so GRU remained the default next-day model despite XGBoost's lower average error. This decision follows the predeclared rule rather than choosing a model after viewing only its best metric."),
         h("B.3 Why attention accuracy is not explanation faithfulness"),
-        p("Spatial attention improved the spatial-patch model on its own 2023 test, but FA and TA did not improve the sequence model. Learned weighting can therefore help one architecture without reliably helping another. The faithfulness audit further separates accuracy from interpretability: attention rankings agreed less with replacement sensitivity than SHAP in all four comparisons. For S-SA under mean replacement, the highest-attention group's deletion changed output by 72.53 AQI points, close to 70.46 for a random ranking; SHAP's top group changed it by 73.76. This weak separation limits an explanation claim for that deletion test."),
+        p("On SWT-w7, spatial attention improved the spatial-patch model on its own 2023 test, but FA and TA did not improve the sequence model. Table 7 shows that the S-SA and FA outcomes reverse on SW-w7, so they depend on the input set as well as the architecture. A learned weighting therefore cannot be assumed to help a given architecture. The faithfulness audit further separates accuracy from interpretability: attention rankings agreed less with replacement sensitivity than SHAP in all four comparisons. For S-SA under mean replacement, the highest-attention group's deletion changed output by 72.53 AQI points, close to 70.46 for a random ranking; SHAP's top group changed it by 73.76. This weak separation limits an explanation claim for that deletion test."),
         p("Replacement is an intervention on a fixed model, not a controlled experiment on atmospheric causes. Correlated inputs and unrealistic mean replacements can change rankings; the different same-city seasonal-donor correlations in Table 5 demonstrate that sensitivity. Thus, neither an attention heat map nor one perturbation score establishes the physical source of pollution."),
         h("B.4 Why cross-city conclusions differ from pooled conclusions"),
-        p("The corrected LOCO study directly tests transfer to an unseen city. It changes the previous inference that cross-city validation was still pending. The spatial S-TA+SA variant outperformed its within-family Uniform control on the equal-city average and in five cities, suggesting that joint temporal and spatial weighting can help this architecture transfer across locations. The gain is not uniform: three cities did not improve. Sequence TA illustrates why aggregation matters: a small pooled RMSE gain occurred alongside a small city-macro RMSE loss. Delhi supplied 11,658 of the 29,923 LOCO station-days, so the pooled score is influenced strongly by that city's error. Equal-city averaging answers a different question from pooled station-day error."),
+        p("The corrected LOCO study directly tests transfer to an unseen city. It changes the previous inference that cross-city validation was still pending. The spatial S-TA+SA variant outperformed its within-family Uniform control on the equal-city average and in five cities, suggesting that joint temporal and spatial weighting can help this architecture transfer across locations. The gain is not uniform: three cities did not improve. The S-TA+SA gain also held on SW-w7 (Table 7), whereas sequence TA gained only on SW-w7. Sequence TA illustrates why aggregation matters: a small pooled RMSE gain occurred alongside a small city-macro RMSE loss. Delhi supplied 11,658 of the 29,923 LOCO station-days, so the pooled score is influenced strongly by that city's error. Equal-city averaging answers a different question from pooled station-day error."),
         p("The LOCO checkpoints were evaluated for predictive accuracy, not with the 300-row replacement-based faithfulness audit used for the separate chronological checkpoints. Therefore the transfer gain cannot be used to claim that their attention maps are faithful explanations. Likewise, the LOCO architecture uses different inputs and training folds from the operational GRU and weather XGBoost; its scores do not justify replacing the frozen next-day default."),
         h("B.5 Why higher alert precision did not justify promotion"),
         p("The severe-event candidate issued 765 fewer 2025 alerts than the frozen forecast threshold. That more selective behavior increased precision but missed many additional true severe days, reducing recall by 18.05 percentage points. The abrupt-change candidate was still more selective: nine alerts for 3,975 observed events, with eight correct, so high precision describes a very small subset and almost no coverage. This is consistent with the difficulty of predicting sudden AQI changes from the current forecast and prior-day AQI alone. Both candidates failed the calibration promotion rule; their 2025 results are research findings only."),
         section_h("C. Inference"),
-        p("The research gap has three distinct answers. First, recent AQI is a strong baseline, while history-aware and weather-assisted models improved average error within their own paired historical cohorts. Second, the corrected LOCO experiment supplies evidence of partial cross-city transfer: S-TA+SA improved the eight-city average relative to S-Uniform, but not every city; sequence TA did not improve the equal-city average. Third, attention-based accuracy and explanation quality remain separate. On sampled chronological checkpoints, attention rankings agreed less with fixed-model replacement sensitivity than SHAP; the LOCO checkpoints have not yet received that audit. Neither analysis supports a causal claim about pollution sources."),
+        p("The research gap has three distinct answers. First, recent AQI is a strong baseline, while history-aware and weather-assisted models improved average error within their own paired historical cohorts. Second, the corrected LOCO experiment supplies evidence of partial cross-city transfer: S-TA+SA improved the eight-city average relative to S-Uniform on both input sets, but not every city; sequence TA improved the equal-city average only on SW-w7. Several other attention gains reversed between input sets (Table 7), so the evidence does not support a general claim that learned attention improves accuracy. Third, attention-based accuracy and explanation quality remain separate. On sampled chronological checkpoints, attention rankings agreed less with fixed-model replacement sensitivity than SHAP; the LOCO checkpoints have not yet received that audit. Neither analysis supports a causal claim about pollution sources."),
         p("Lower RMSE alone is insufficient for deployment. The weather XGBoost candidate failed the predeclared sharp-change precision condition, and the event classifiers lost too much recall and failed their own promotion checks. The frozen GRU therefore remains the next-day default. The 30% GRU / 70% XGBoost blend was selected on earlier development data but has no independent prospective score and is excluded from the validated comparisons."),
-        p("The October-December 2026 prospective protocol remains reserved. As of 21 October 2026, the CPCB October collection had no usable new station-days or immutable before-target forecast records, so there is no prospective metric to report. A valid future comparison requires forecasts recorded before target-day UTC midnight from eligible prior-day AQI and earlier-issued weather, followed by quality-checked observations. Historical and cross-city results should be interpreted as evidence for the specified evaluation settings, not as verified future performance."),
-        p("<b>Reproducibility note:</b> Numerical results are traceable to the project's saved forecast metrics (results/forecast_2025 and results/forecast_2026), corrected LOCO summary (results/city_transfer/model_summary.csv), alert metrics (results/event_alerts/metrics.csv), attention audits (results/followthrough/oct12-v1), and prospective status (results/prospective/status.json)."),
+        p("The October-December 2026 evaluation period is still in progress. As of 2 November 2026, CPCB October exports existed for 104 of 107 stations, with 1,559 usable station-days inside the test window, and there were no immutable before-target forecast records, so there is no prospective metric to report. Those records cannot be produced from monthly CPCB exports: a record needs the previous day's AQI before target-day UTC midnight, and the portal offered no row for the current month. The frozen blend can still be scored after 31 December from later exports and archived forecasts; that would be an out-of-time test of a frozen model, not a record of live-issued forecasts. Historical and cross-city results should be interpreted as evidence for the specified evaluation settings, not as verified future performance."),
+        p("<b>Reproducibility note:</b> Numerical results are traceable to the project's saved forecast metrics (results/forecast_2025 and results/forecast_2026), corrected LOCO summary (results/city_transfer/model_summary.csv), attention comparison across input sets (results/attention_stability/gains.csv), alert metrics (results/event_alerts/metrics.csv), attention audits (results/followthrough/oct12-v1), and prospective status (results/prospective/status.json)."),
     ]
 
 
