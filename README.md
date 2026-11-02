@@ -20,17 +20,27 @@ A 30% GRU / 70% archived-weather XGBoost blend is frozen in
 test score** and does not replace the verified GRU default.
 
 The prospective target period is **13 October-31 December 2026**. Ground AQI
-exports are pulled with the same CAPTCHA-gated downloader used for the historical
-years, pointed at a dedicated output root (rerun periodically as new months
-become available on the portal; it skips stations/months already complete):
+exports use the same CAPTCHA-gated downloader as the historical years. On
+2 November the portal listed October but had no November row, so expect a month
+to appear only after it ends. Rerun in early December and early January, and
+again for January after that month ends, because the 31 December target needs
+the 05:00 IST reading on 1 January. Stations missing any requested month are
+downloaded again and existing files overwritten.
 
 ```powershell
 python src/cpcb_downloader.py --auto --year 2026 --months 10 11 12 --output-root data/raw/cpcb_prospective
+python src/cpcb_downloader.py --auto --year 2027 --months 1 --output-root data/raw/cpcb_prospective
 ```
 
-After that
-period, collect ground exports including January boundary readings, then prepare
-new inputs in separate directories:
+`src/prospective_tracker.py record` cannot currently produce before-target
+records. It needs the previous day's AQI before target-day UTC midnight, which
+monthly exports do not provide, and complete earlier-issued weather, which exists
+only from 23:00 UTC before the target. `tracker status` reports
+`target_has_prior_day_aqi` and `weather_failed_cities`. The evaluation below does
+not depend on those records: it scores the frozen models out of time, from later
+exports and archived forecasts.
+
+After the period, prepare new inputs in separate directories:
 
 ```powershell
 python src/prepare_prospective_inputs.py ground --raw-root data/raw/cpcb_prospective --output data/processed/prospective_ground_v1

@@ -218,10 +218,28 @@ def record(target):
     print('Recorded',len(r),'station forecasts for',target.date())
     return destination
 
+def latest_download_log():
+    logs=[p for p in [ROOT/'logs/prospective_oct13.log',*(ROOT/'logs').glob('cpcb_prospective*.log')] if p.exists()]
+    return max(logs,key=lambda p:p.stat().st_mtime_ns) if logs else None
+
+def ground_summary(gd,period,target):
+    """Separate test-window days from pre-test history; a record needs AQI for the day before its target."""
+    path=gd/'aligned_dataset.csv' if gd else None
+    if not path or not path.exists():
+        return dict(usable_station_days_in_period=0,latest_observed_aqi=None,target_has_prior_day_aqi=False)
+    d=pd.read_csv(path,usecols=['date','AQI_eod','aqi_flat_day'],parse_dates=['date'])
+    d=d[d.AQI_eod.notna()&~d.aqi_flat_day]
+    prior=pd.Timestamp(target)-pd.Timedelta(days=1) if target else None
+    return dict(usable_station_days_in_period=int(d.date.between(*period).sum()),
+        latest_observed_aqi=str(d.date.max().date()) if len(d) else None,
+        target_has_prior_day_aqi=bool(prior is not None and (d.date==prior).any()))
+
 def refresh_status():
     frozen=load_frozen();stations=pd.read_csv(ROOT/'config/stations.csv');gd=latest('ground');wd=latest('weather')
     gm=json.loads((gd/'manifest.json').read_text()) if gd else {}
     wm=json.loads((wd/'manifest.json').read_text()) if wd else {}
+    daily=pd.read_csv(wd/'daily.csv') if wd else pd.DataFrame()
+    failed=daily.loc[daily.error.notna(),'city'].tolist() if 'error' in daily else []
     entries=[]
     for path in sorted((OUT/'ledger').glob('*/manifest.json')):
         m=json.loads(path.read_text());m['integrity_valid']=digest(path.parent/'predictions.csv')==m['predictions_sha256']
@@ -237,11 +255,12 @@ def refresh_status():
         stations_with_exports=gm.get('stations_with_exports',0),expected_stations=len(stations),
         usable_station_days=gm.get('usable_station_days',0),ground_captured_utc=gm.get('captured_utc'),
         weather_target=wm.get('target_date'),weather_complete_cities=wm.get('complete_cities',0),expected_cities=len(city),
-        weather_captured_utc=wm.get('retrieved_utc'),recorded_days=len(entries),records=entries,cities=city,
+        weather_captured_utc=wm.get('retrieved_utc'),weather_failed_cities=failed,recorded_days=len(entries),records=entries,cities=city,
         downloader_waiting_captcha=False,final_evaluation_date='2027-01-01',
-        note='October counts include pre-test history. Only immutable before-target records count as prospective forecasts. No final test score yet.')
-    log=ROOT/'logs/prospective_oct13.log'
-    if log.exists():
+        **ground_summary(gd,frozen['prospective_period'],wm.get('target_date')),
+        note='usable_station_days includes pre-test history; usable_station_days_in_period does not. A before-target record needs the previous day\'s AQI and all 24 earlier-issued hours, which exist only from 23:00 UTC before the target. No final test score yet.')
+    log=latest_download_log()
+    if log:
         text=log.read_text(encoding='utf-8',errors='replace')
         data['downloader_waiting_captcha']='Auto mode: solve' in text and 'CAPTCHA solved.' not in text and 'No CAPTCHA appeared' not in text
         data['download_completed']='                    COMPLETE' in text

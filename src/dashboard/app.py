@@ -5,6 +5,7 @@ from functools import lru_cache
 import json
 from pathlib import Path
 from hashlib import sha256
+import re
 import sys
 
 import pandas as pd
@@ -349,11 +350,11 @@ def prospective_state():
     next_day=pd.Timestamp.now(tz='UTC').tz_localize(None).normalize()+pd.Timedelta(days=1)
     info['next_target_date']=str(next_day.date()) if pd.Timestamp('2026-10-13')<=next_day<=pd.Timestamp('2026-12-31') else None
     info['download_city_counts']={str(city):int((g.files>0).sum()) for city,g in live.groupby('city')}
-    log=ROOT/'logs/prospective_oct13.log'
-    if log.exists():
-        text=log.read_text(encoding='utf-8',errors='replace')
+    logs=[p for p in [ROOT/'logs/prospective_oct13.log',*(ROOT/'logs').glob('cpcb_prospective*.log')] if p.exists()]
+    if logs:
+        text=max(logs,key=lambda p:p.stat().st_mtime_ns).read_text(encoding='utf-8',errors='replace')
         info['download_completed']='                    COMPLETE' in text
-        info['attempted_stations']=text.count('0/1 months downloaded')+text.count('1/1 months downloaded')
+        info['attempted_stations']=len(re.findall(r'\d+/\d+ months downloaded',text))
         info['october_rows_unavailable']=text.count('Could not find row for October')
         info['downloader_waiting_captcha']='Auto mode: solve' in text and 'CAPTCHA solved.' not in text and 'No CAPTCHA appeared' not in text
     return info

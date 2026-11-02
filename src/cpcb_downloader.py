@@ -287,7 +287,7 @@ def select_dropdown(page, dropdown_number, value, name):
     exact = page.locator(".ng-option").filter(
         has_text=value
     )
-    target = exact.first
+    target = None
     for i in range(exact.count()):
         try:
             if exact.nth(i).inner_text().strip() == value:
@@ -295,6 +295,14 @@ def select_dropdown(page, dropdown_number, value, name):
                 break
         except:
             continue
+
+    if target is None:
+        # A substring hit can be another site ("IMD Lodhi Road" for "Lodhi Road"),
+        # whose data would then be saved under this station's folder.
+        if name == "Station":
+            page.keyboard.press("Escape")
+            raise Exception(f"No exact option '{value}' for {name}")
+        target = exact.first
 
     target.click()
 

@@ -6,14 +6,18 @@ deadline/consistency check (validate_capture). record() itself needs live CPCB/w
 snapshots and frozen model artifacts, so it is exercised end-to-end by running the
 pipeline, not here.
 """
+import json
 import sys
+import tempfile
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from prospective_tracker import target_day, validate_capture
+import prospective_tracker as tracker
+from prospective_tracker import ground_summary, target_day, validate_capture
 
 
 def test_target_day_accepts_dates_in_the_reserved_window():
@@ -36,6 +40,29 @@ def test_target_day_rejects_timezone_aware_input():
 def test_target_day_rejects_non_midnight_input():
     with pytest.raises(ValueError, match="unzoned"):
         target_day("2026-11-01 06:00:00")
+
+
+def test_ground_summary_separates_test_window_and_checks_prior_day(tmp_path):
+    pd.DataFrame({"date": ["2026-10-12", "2026-10-13", "2026-10-30", "2026-10-31"],
+                  "AQI_eod": [100.0, 110.0, 120.0, None], "aqi_flat_day": [False, False, False, False]}).to_csv(tmp_path / "aligned_dataset.csv", index=False)
+    period = ["2026-10-13", "2026-12-31"]
+    ready = ground_summary(tmp_path, period, "2026-10-31")
+    assert ready == dict(usable_station_days_in_period=2, latest_observed_aqi="2026-10-30", target_has_prior_day_aqi=True)
+    assert ground_summary(tmp_path, period, "2026-11-03")["target_has_prior_day_aqi"] is False
+
+
+def test_weather_hours_are_incomplete_until_the_last_hour_before_target():
+    time = pd.date_range("2026-11-03", periods=24, freq="h").strftime("%Y-%m-%dT%H:%M").tolist()
+    data = {"hourly": {"time": time, **{v + "_previous_day1": [1.0] * 24 for v in tracker.VARIABLES}}}
+    response = Mock(headers={}, url="u")
+    response.json.return_value = data
+    stations = pd.DataFrame([{"city": "Delhi", "lat": 28.6, "lon": 77.2}])
+    for now, status in [("2026-11-02T22:59:00Z", "waiting_for_complete_earlier_runs"), ("2026-11-02T23:00:00Z", "ready")]:
+        with tempfile.TemporaryDirectory() as folder, patch.object(tracker, "OUT", Path(folder)), \
+                patch.object(tracker, "now_utc", return_value=pd.Timestamp(now)), \
+                patch.object(tracker.pd, "read_csv", return_value=stations), patch.object(tracker.requests, "get", return_value=response):
+            directory = tracker.collect_weather("2026-11-03")
+            assert json.loads((directory / "manifest.json").read_text())["complete_cities"] == (status == "ready")
 
 
 def _manifest(target, retrieved_utc):
