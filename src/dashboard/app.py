@@ -172,11 +172,30 @@ def state():
                 rows=json.loads(frame.to_json(orient='records')))
     research_path=ROOT/'results/followthrough/oct12-v1/summary.json'
     research=json.loads(research_path.read_text()) if research_path.exists() else None
-    return dict(prospective=prospective_state(),research=research,default_mode='next_day_2026' if development and development.get('recommended') else 'next_day',development_2026=development,stations=json.loads(read(ROOT/'config/stations.csv')[['station_id','station_name','city']].to_json(orient='records')),modes=modes, jobs=jobs, study_status=study["status"] if study else "not_started", audits=audits,
+    stability_path=ROOT/'results/attention_stability/gains.csv'
+    stability=json.loads(read(stability_path).to_json(orient='records')) if stability_path.exists() else []
+    return dict(prospective=prospective_state(),research=research,default_mode='next_day_2026' if development and development.get('recommended') else 'next_day',development_2026=development,attention_stability=stability,stations=json.loads(read(ROOT/'config/stations.csv')[['station_id','station_name','city','lat','lon']].to_json(orient='records')),modes=modes, jobs=jobs, study_status=study["status"] if study else "not_started", audits=audits,
                 forecast_2025=forecast_check,
                 year_holdout=year_check,
                 training_device=study.get("training_device", "cpu") if study else "cpu", seeds=study.get("seeds", 3) if study else 3,
                 disclaimer="Historical results: same-day uses 2024; GRU next-day uses 2025; the separate weather-model test uses Jan–Sep 2026 when verified.")
+
+
+def packed_state():
+    """state() with rows stored by column, which makes the page about 80% smaller."""
+    packed=state()
+    index={s['station_id']:i for i,s in enumerate(packed['stations'])}
+    for mode in packed['modes'].values():
+        rows=pd.DataFrame(mode.pop('rows'))
+        rows['day']=rows.date.str[:10]
+        days=sorted(rows.day.unique())
+        lookup={d:i for i,d in enumerate(days)}
+        columns=dict(day=rows.day.map(lookup).tolist(),station=rows.station_id.map(index).tolist())
+        for key in ['y','pred','reference','gru_pred','lower','upper']:
+            if key in rows:
+                columns[key]=[None if pd.isna(v) else round(float(v),3) for v in rows[key]]
+        mode.update(days=days,columns=columns)
+    return packed
 
 
 @app.get("/")
@@ -187,6 +206,11 @@ def home():
 @app.get("/api/state")
 def data():
     return jsonify(state())
+
+
+@app.get("/api/dashboard")
+def dashboard_data():
+    return jsonify(packed_state())
 
 
 @app.post("/api/forecast")
@@ -218,7 +242,8 @@ def forecast():
             if artifact['kind']!='gru_ensemble': raise ValueError('This forecast input form requires a history model')
             values=payload.get('previous_aqi')
             if not isinstance(values,list) or len(values)!=27: raise ValueError('Enter 27 previous daily AQI values, oldest first, plus the latest value')
-            previous=np.asarray([float(v) for v in values],dtype=float)
+            try: previous=np.asarray([float(v) for v in values],dtype=float)
+            except (TypeError,ValueError): raise ValueError('Each previous AQI must be a number') from None
             if not np.isfinite(previous).all() or ((previous<0)|(previous>500)).any(): raise ValueError('Each previous AQI must be between 0 and 500')
             target_date=observed_date+pd.Timedelta(days=1)
             history_dates=pd.date_range(end=observed_date,periods=28)
@@ -401,11 +426,13 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--export", type=Path)
+    ap.add_argument("--public-files", action="store_true", help="link the local demo ZIP and PDFs hosted beside the exported page")
     args = ap.parse_args()
     if args.export:
         html = Path(__file__).with_name("index.html").read_text(encoding="utf-8")
-        payload = json.dumps(state()).replace("<", "\\u003c")
-        html = html.replace("/* SNAPSHOT */", "window.snapshot=" + payload + ";")
+        payload = json.dumps(packed_state(), separators=(",", ":")).replace("<", "\\u003c")
+        snapshot = "window.snapshot=" + payload + ";" + ("window.publicFiles=true;" if args.public_files else "")
+        html = html.replace("/* SNAPSHOT */", snapshot)
         args.export.parent.mkdir(parents=True, exist_ok=True)
         args.export.write_text(html, encoding="utf-8")
         print(f"Dashboard exported: {args.export}")

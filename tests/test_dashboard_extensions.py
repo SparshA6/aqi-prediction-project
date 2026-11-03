@@ -1,5 +1,7 @@
+import json
 import sys
 from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 import numpy as np
@@ -46,6 +48,49 @@ class DashboardExtensions(unittest.TestCase):
         v=m[(m['mode']=='same_day')&(m.split=='selection')&m.model.str.endswith('-env')]
         self.assertEqual(s['modes']['same_day_env']['model'],v.sort_values(['RMSE','model']).iloc[0].model)
         self.assertTrue(all('reference' in r for r in s['modes']['next_day']['rows']))
+
+    def test_packed_state_keeps_every_row(self):
+        full=app.state();packed=app.packed_state()
+        stations=packed['stations']
+        for name,mode in full['modes'].items():
+            p=packed['modes'][name];c=p['columns']
+            self.assertNotIn('rows',p)
+            self.assertEqual(len(c['day']),len(mode['rows']))
+            for i in [0,len(mode['rows'])//2,len(mode['rows'])-1]:
+                row=mode['rows'][i]
+                self.assertEqual(p['days'][c['day'][i]],row['date'][:10])
+                self.assertEqual(stations[c['station'][i]]['station_id'],row['station_id'])
+                self.assertEqual(stations[c['station'][i]]['city'],row['city'])
+                for key in ['y','pred','reference','gru_pred','lower','upper']:
+                    if key in row: self.assertAlmostEqual(c[key][i],row[key],places=3)
+            self.assertAlmostEqual(float(np.sqrt(np.mean((np.array(c['pred'])-np.array(c['y']))**2))),mode['rmse'],places=3)
+        self.assertLess(len(json.dumps(packed)),len(json.dumps(full))/3)
+
+    def test_page_data_used_by_new_sections(self):
+        s=app.state()
+        self.assertEqual(len(s['attention_stability']),36)
+        self.assertTrue(all(np.isfinite([r['lat'],r['lon']]).all() for r in s['stations']))
+        page=(ROOT/'src/dashboard/index.html').read_text(encoding='utf-8')
+        self.assertEqual(page.count('/* SNAPSHOT */'),1)
+        self.assertIn("/api/dashboard",page)
+
+    def test_export_links_public_files_only_when_asked(self):
+        with tempfile.TemporaryDirectory() as folder,patch.object(app,'packed_state',return_value={}):
+            path=Path(folder)/'index.html'
+            with patch.object(sys,'argv',['app.py','--export',str(path)]): app.main()
+            self.assertNotIn('window.publicFiles=true;',path.read_text(encoding='utf-8'))
+            with patch.object(sys,'argv',['app.py','--export',str(path),'--public-files']): app.main()
+            page=path.read_text(encoding='utf-8')
+            self.assertIn('window.snapshot={};window.publicFiles=true;',page)
+            for name in ['AQI_Local_Demo.zip','AQI_Methodology_Submission.pdf','AQI_Results_and_Discussion_Submission.pdf']:
+                self.assertIn(f'href="{name}"',page)
+
+    def test_forecast_values_give_readable_errors(self):
+        body={'station_id':'alipur_delhi','observed_date':'2025-10-31','latest_aqi':100}
+        for values in [[None]*27,['x']*27]:
+            response=self.client.post('/api/forecast',json={**body,'previous_aqi':values})
+            self.assertEqual(response.status_code,400)
+            self.assertEqual(response.get_json()['error'],'Each previous AQI must be a number')
 
     def test_spike_direction_and_empty_denominators(self):
         df=pd.DataFrame(dict(y=[170,30,110],reference=[100,100,100],pred=[160,160,160]))

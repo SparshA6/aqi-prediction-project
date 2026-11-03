@@ -1,305 +1,1464 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#103c3c">
-  <title>AQI Forecast Studio · Project Demo</title>
-  <style>
-    [hidden]{display:none!important}
-    :root{--ink:#153334;--muted:#5d7473;--deep:#103c3c;--accent:#087f74;--accent-soft:#e3f3ef;--line:#d9e6e2;--bg:#f3f7f5;--white:#fff;--amber:#e7b56c}
-    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Segoe UI,Arial,sans-serif;line-height:1.5}
-    button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.55;cursor:wait}a{color:inherit}
-    .hero{position:relative;overflow:hidden;background:radial-gradient(circle at 82% 16%,#1c6967 0,#103c3c 38%,#0b2c30 100%);color:white}
-    .hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 97%,#ffffff0a 98%),linear-gradient(0deg,transparent 97%,#ffffff0a 98%);background-size:34px 34px;mask-image:linear-gradient(90deg,transparent 28%,black)}
-    .hero-shell{position:relative;max-width:1320px;margin:auto;padding:42px 30px 48px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(300px,.7fr);align-items:center;gap:60px}
-    .eyebrow,.section-kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}.eyebrow{color:#a9e7d7}.hero h1{font-size:clamp(40px,5vw,66px);letter-spacing:-.045em;line-height:1.06;margin:17px 0 18px;max-width:740px}.hero-lead{color:#d2e9e3;font-size:17px;max-width:620px;margin:0;line-height:1.6}
-    .hero-actions{display:flex;gap:11px;flex-wrap:wrap;margin:28px 0}.hero-actions a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:14px;font-weight:750;border-radius:10px;padding:12px 17px}.hero-actions .primary{background:#b7eecb;color:#123b37}.hero-actions .secondary{border:1px solid #84b1ad;color:white}
-    .hero-facts{display:flex;gap:24px;flex-wrap:wrap;color:#bad3cf;font-size:12px}.hero-facts b{display:block;color:white;font-size:18px;line-height:1.15;margin-bottom:3px}
-    .hero-preview{background:#ffffffed;color:var(--ink);border-radius:23px;padding:26px;box-shadow:0 28px 70px #001e2299;transform:rotate(2deg);max-width:420px;justify-self:end;width:100%;border:1px solid #ffffff99}
-    .preview-top,.preview-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:var(--muted)}.preview-label{background:#e2f2ed;color:#17655d;padding:6px 9px;border-radius:99px;font-weight:750}.preview-place{font-weight:750;font-size:20px;margin:24px 0 6px;line-height:1.25}.preview-number{font-size:72px;letter-spacing:-.08em;font-weight:800;line-height:1.1;color:#0a776e}.preview-number small{font-size:16px;letter-spacing:0;margin-left:7px;font-weight:700}.preview-foot{border-top:1px solid var(--line);padding-top:16px;margin-top:18px}
-    .wrap{max-width:1320px;margin:0 auto;padding:25px 30px 44px}.demo-nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}.demo-nav a{text-decoration:none;background:white;color:#205f58;border:1px solid var(--line);border-radius:999px;padding:8px 13px;font-size:12px;font-weight:750}.demo-nav a:hover{background:var(--accent-soft)}
-    .control-panel,.panel,.card{background:white;border:1px solid var(--line);box-shadow:0 10px 28px #1b46420b}.control-panel,.panel{border-radius:17px;padding:24px;margin-top:18px}.control-panel{border-top:4px solid var(--accent)}
-    .section-heading{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:15px}.section-heading h2,h2{font-size:21px;line-height:1.25;letter-spacing:-.02em;margin:5px 0 0}.section-heading p{margin:0;color:var(--muted);font-size:13px;max-width:500px}.section-kicker{color:var(--accent)}
-    .mode-tabs{display:flex;flex-wrap:wrap;gap:8px;padding:6px;background:#eef5f2;border-radius:12px;width:max-content;max-width:100%}.mode-tabs button{border:0;background:transparent;border-radius:8px;padding:11px 16px;color:#466a66;font-size:13px;font-weight:750}.mode-tabs button.active{background:var(--accent);color:white;box-shadow:0 4px 12px #087f7440}
-    .location-row{display:grid;grid-template-columns:minmax(170px,1fr) minmax(230px,2fr);gap:14px;margin-top:18px;max-width:780px}label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:12px;font-weight:700}select,input:not([type=checkbox]):not([type=file]),textarea{width:100%;background:white;color:var(--ink);border:1px solid #cadbd6;border-radius:9px;padding:10px 12px;font-size:14px;min-height:43px}input[type=file]{background:#f7faf9;border:1px dashed #b8d1c9;border-radius:9px;padding:9px;font-size:12px}textarea{min-height:90px;resize:vertical}
-    button.action{border:1px solid var(--line);padding:10px 14px;border-radius:9px;background:white;color:var(--ink);font-size:13px;font-weight:700}button.action:hover{border-color:var(--accent)}button.action.primary{background:var(--accent);color:white;border-color:var(--accent)}
-    .notice{display:inline-flex;align-items:center;gap:9px;margin:18px 0 0;padding:9px 12px;background:#eaf6ef;color:#316458;border-radius:9px;font-size:12px;font-weight:650}.notice:before{content:"";width:7px;height:7px;background:#32a677;border-radius:50%;flex:none}
-    #description{margin:18px 0 12px;color:var(--muted);font-size:13px}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card{border-radius:13px;padding:18px}.card small{color:var(--muted);font-size:12px;font-weight:700}.card .number{font-size:32px;letter-spacing:-.03em;font-weight:800;margin:7px 0 2px}.card .sub{font-size:12px;color:var(--muted);line-height:1.55}.metrics>.card:first-child{background:#e8f5ee;border-color:#cce8d6}.metrics>.card:first-child .number{color:#08745e}
-    .caption{font-size:13px;line-height:1.6;color:var(--muted)}.filter-grid{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:12px;margin:18px 0 10px}.filter-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.city-summary{margin-top:15px;border-top:1px solid var(--line);padding-top:10px}.city-summary summary{font-size:13px;font-weight:750;cursor:pointer;color:var(--accent)}.city-summary .metrics{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:12px}.citycard{text-align:left;cursor:pointer}.citycard .number{font-size:24px}.citycard:hover{border-color:var(--accent)}
-    .chart-grid{display:grid;grid-template-columns:minmax(0,1fr) 305px;gap:22px;align-items:start;margin-top:16px}.chart-visual{min-width:0}.chart-scroll{overflow-x:auto}.chart-inner{position:relative;min-width:640px}#plot{display:block;width:100%;min-width:640px;cursor:crosshair}#plot:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}.chart-side{background:#f8fbfa;border:1px solid var(--line);border-radius:12px;padding:14px}.chart-side h3{font-size:13px;margin:0 0 8px}.series-table-wrap{overflow-x:auto}#seriestable{width:100%;border-collapse:collapse;font-size:11px}#seriestable th,#seriestable td{padding:8px 3px;text-align:left;border-bottom:1px solid #e6efeb;vertical-align:top}#seriestable th:first-child,#seriestable td:first-child{width:36px}#seriestable td:last-child{white-space:nowrap;font-weight:750}#seriestable input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}.series-note{display:block;color:var(--muted);font-size:10px;font-weight:400;line-height:1.25;margin:3px 0 0 19px}.series-swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px}.series-unavailable{opacity:.52}.legend{display:flex;flex-wrap:wrap;gap:7px 14px;font-size:11px;margin-top:11px}.legend i{display:inline-block;width:13px;height:3px;vertical-align:middle;margin-right:5px}.chart-tooltip{position:absolute;z-index:2;width:240px;padding:13px;background:white;border:1px solid #adc9c0;border-radius:10px;box-shadow:0 8px 22px #11343122;pointer-events:none;font-size:12px}.chart-tooltip>strong{display:block;margin-bottom:8px}.tooltip-row{display:flex;justify-content:space-between;gap:7px;margin:7px 0}.chart-tooltip small{color:var(--muted)}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-    .station-tools{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:15px 0}.station-tools label{min-width:220px}.station-tools .count{margin-left:auto;color:var(--muted);font-size:12px}.table-scroll{overflow:auto;max-height:440px;border:1px solid var(--line);border-radius:10px}table{width:100%;border-collapse:collapse}#stationtable{font-size:13px}#stationtable th,#stationtable td,#pairedscores th,#pairedscores td,#cityforecaststations th,#cityforecaststations td{padding:11px 12px;text-align:left;border-bottom:1px solid #eaf0ed}#stationtable th,#pairedscores th,#cityforecaststations th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#58736e;background:#f5f9f7;position:sticky;top:0;z-index:1}#stationtable tbody tr:hover{background:#f5faf7}#stationtable button{background:none;border:0;color:#087f74;text-align:left;font-size:12px;font-weight:750;padding:0}.empty-row{color:var(--muted);text-align:center!important}
-    .forecast-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.forecast-grid .panel{min-width:0}.forecast-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:end;margin-top:17px}.forecast-form label.wide{grid-column:1/-1}.forecast-form .form-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}.result-note{min-height:28px;margin-bottom:0;font-weight:700;color:#176e62}.form-actions button{align-self:end}.city-forecast-table{overflow:auto;max-height:300px}#pairedscores{font-size:13px}
-    footer{margin-top:26px;border-top:1px solid var(--line);padding-top:17px;color:var(--muted);font-size:12px}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #83d9bc;outline-offset:2px}
-    @media(max-width:1060px){.hero-shell{gap:30px}.chart-grid{grid-template-columns:1fr}.series-table-wrap{overflow:auto}#seriestable{min-width:560px}.forecast-grid{grid-template-columns:1fr}.city-summary .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:720px){.hero-shell{grid-template-columns:1fr;padding:35px 18px;gap:24px}.hero-preview{justify-self:start;transform:none;max-width:100%}.wrap{padding:17px 14px 35px}.control-panel,.panel{padding:17px}.section-heading{display:block}.section-heading p{margin-top:5px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.location-row,.filter-grid{grid-template-columns:1fr 1fr}.mode-tabs{width:100%}.mode-tabs button{flex:1 1 40%}.hero-facts{gap:16px}}
-    @media(max-width:480px){.metrics,.city-summary .metrics,.location-row,.filter-grid,.forecast-form{grid-template-columns:1fr}.hero h1{font-size:40px}.hero-actions a{flex:1}.card .number{font-size:29px}.station-tools .count{margin-left:0}.forecast-form label.wide,.forecast-form .form-actions{grid-column:auto}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#103c3c">
+<title>AQI Forecast Studio · Project Demo</title>
+<style>
+[hidden]{display:none!important}
+:root{
+  color-scheme:light;
+  --ink:#153334;--ink-2:#46605f;--muted:#5d7473;--deep:#103c3c;--accent:#087f74;--accent-strong:#066a61;--accent-soft:#e3f3ef;
+  --line:#d9e6e2;--line-strong:#b9cfc9;--bg:#f1f6f4;--surface:#fff;--surface-2:#f7faf9;--warn-bg:#fdf3e1;--warn-ink:#6d4a12;--error:#a32b2b;
+  --measured:#3157b5;--model:#0b8f83;--yesterday:#c2761b;--gru:#9150c4;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scrollbar-color:#a9c2bc transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 .9375rem/1.5 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+::selection{background:#bfe6dc;color:var(--deep)}
+h1,h2,h3,p{margin:0}
+h2{font-size:1.1875rem;line-height:1.3;font-weight:650;letter-spacing:-.01em;text-wrap:balance}
+h3{font-size:.9375rem;line-height:1.35;font-weight:650}
+a{color:var(--accent-strong);text-underline-offset:2px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.55}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=range]{accent-color:var(--accent)}
+.muted{color:var(--muted)}
+.small{font-size:.8125rem}
+.prose{max-width:70ch}
+
+/* Top bar */
+.topbar{position:sticky;top:0;z-index:20;background:var(--deep);color:#fff}
+.topbar-in{max-width:1320px;margin:auto;padding:0 20px;min-height:54px;display:flex;align-items:center;gap:22px}
+.brand{font-weight:700;font-size:1rem;white-space:nowrap}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tabs button{background:none;border:0;color:#cfe5df;padding:8px 13px;border-radius:8px;font-weight:600;font-size:.875rem;white-space:nowrap;transition:background .15s}
+.tabs button:hover{background:#ffffff14;color:#fff}
+.tabs button[aria-selected=true]{background:#fff;color:var(--deep)}
+.tabs button:focus-visible{outline-color:#fff}
+.honesty{margin-left:auto;font-size:.8125rem;color:#cfe5df;white-space:nowrap}
+
+/* Shell */
+.wrap{max-width:1320px;margin:auto;padding:16px 20px 40px;display:grid;gap:14px}
+.wrap>*,.view>*{min-width:0}
+.view{display:grid;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 18px;margin-bottom:12px}
+.panel-head p{color:var(--muted);font-size:.8125rem;max-width:95ch}
+.field{display:flex;flex-direction:column;gap:4px;font-size:.8125rem;font-weight:600;color:var(--ink-2);min-width:0}
+select,input[type=date],input[type=search],textarea{width:100%;background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:7px 10px;font-size:.875rem;font-weight:400;color:var(--ink);min-height:38px}
+select:hover,input:hover,textarea:hover{border-color:var(--accent)}
+textarea{min-height:92px;resize:vertical;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:7px 13px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);font-size:.875rem;font-weight:600;color:var(--ink);text-decoration:none;transition:background .15s,border-color .15s}
+.btn:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover:not(:disabled){background:var(--accent-strong);border-color:var(--accent-strong)}
+.btn.icon{width:38px;padding:0}
+.btn svg{width:16px;height:16px;flex:none}
+.note{background:var(--warn-bg);color:var(--warn-ink);border-radius:8px;padding:8px 11px;font-size:.8125rem}
+.error-text{color:var(--error);font-weight:600}
+.empty{color:var(--muted);text-align:center;padding:26px 12px}
+
+/* Guide strip */
+.tips{display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;background:var(--accent-soft);border-radius:10px;padding:9px 12px 9px 14px;font-size:.875rem}
+.tips ol{display:flex;flex-wrap:wrap;gap:4px 20px;margin:0;padding:0;list-style:none;counter-reset:tip}
+.tips li{counter-increment:tip;display:flex;gap:7px;align-items:baseline}
+.tips li:before{content:counter(tip);font-weight:700;font-size:.75rem;color:#fff;background:var(--accent);width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;flex:none}
+.tips button{margin-left:auto;background:none;border:0;color:var(--accent-strong);font-weight:600;font-size:.8125rem;padding:4px 6px}
+
+/* Model choice */
+.modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.mode{all:unset;box-sizing:border-box;cursor:pointer;padding:10px 12px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);transition:background .15s,border-color .15s}
+.mode:hover{border-color:var(--accent)}
+.mode:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mode b{display:block;font-weight:650;font-size:.875rem;line-height:1.3}
+.mode span{display:block;font-size:.75rem;color:var(--muted);margin-top:2px}
+.mode[aria-checked=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.mode[aria-checked=true] span{color:#d4efe8}
+.mode-info{margin-top:10px;font-size:.875rem;color:var(--ink-2)}
+.mode-info .warn{display:inline;font-weight:600;color:var(--warn-ink)}
+
+/* Cities */
+.cities{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;margin-top:12px}
+.city{all:unset;box-sizing:border-box;cursor:pointer;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:0;transition:border-color .15s,background .15s}
+.city:hover{border-color:var(--accent)}
+.city:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.city[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.city .top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.city .name{font-weight:650;font-size:.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.city .sub{display:block;font-size:.72rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.num-chip{flex:none;min-width:34px;text-align:center;border-radius:6px;padding:1px 5px;font-weight:700;font-size:.8125rem;font-variant-numeric:tabular-nums;background:#e7eeec;color:var(--muted)}
+
+/* Day bar */
+.daybar{position:sticky;top:54px;z-index:10;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;padding:8px 12px}
+.daybar select{flex:0 1 250px;width:auto;min-width:170px}
+.daybar input[type=date]{width:150px}
+.daybar .nav{display:flex;gap:4px;align-items:center}
+.daybar input[type=range]{flex:1 1 180px;min-width:120px;height:24px;margin:0}
+.day-summary{flex:0 1 auto;font-size:.8125rem;color:var(--ink-2);min-width:0}
+.day-summary b{color:var(--ink)}
+
+/* Selected day answer + chart */
+.explore-grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px;align-items:stretch}
+.answer{display:flex;flex-direction:column;gap:12px}
+.answer .place{font-size:.8125rem;color:var(--muted)}
+.figures{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.figure small{display:block;font-size:.8125rem;font-weight:600;color:var(--ink-2)}
+.figure .val{font-size:2.75rem;font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.band-chip{display:inline-block;border-radius:6px;padding:1px 7px;font-size:.75rem;font-weight:650;white-space:nowrap}
+.verdict{font-size:.9375rem;line-height:1.45}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:.8125rem;margin:0}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.scale svg{display:block;width:100%;height:auto}
+.band-key{margin:auto 0 0;padding:10px 0 0;border-top:1px solid var(--line);list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:.75rem;color:var(--ink-2)}
+.band-key li{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.band-key i{width:10px;height:10px;border-radius:3px;flex:none}
+.chart-tools{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-bottom:8px}
+.seg{display:inline-flex;flex-wrap:wrap;background:#eaf2ef;padding:3px;border-radius:9px;gap:2px}
+.seg button{background:none;border:0;border-radius:6px;padding:4px 10px;font-size:.8125rem;font-weight:600;color:var(--ink-2);min-height:28px}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--accent-strong);box-shadow:0 1px 2px #103c3c22}
+.dates{display:flex;gap:6px;align-items:center;font-size:.8125rem;color:var(--muted)}
+.dates input{width:132px;min-height:32px;padding:3px 7px;font-size:.8125rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:3px 9px;font-size:.8125rem;min-height:30px;transition:background .15s}
+.chip:hover{border-color:var(--accent)}
+.chip i{display:inline-block;width:16px;height:3px;border-radius:2px;flex:none}
+.chip i.area{height:10px;opacity:.5}
+.chip b{font-variant-numeric:tabular-nums;font-weight:650}
+.chip[aria-pressed=false]{background:none;color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line-strong)}
+.chip[aria-pressed=false] i{opacity:.25}
+.chip[aria-pressed=false] b{display:none}
+#plotwrap{position:relative;touch-action:pan-y;user-select:none}
+#plot{display:block;width:100%;cursor:crosshair}
+#plot text,.plot text{font-size:11.5px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.tip{position:fixed;z-index:50;max-width:260px;padding:9px 11px;background:var(--deep);color:#fff;border-radius:8px;font-size:.8125rem;pointer-events:none;box-shadow:0 6px 18px #0b2c3055}
+.tip strong{display:block;font-weight:650;margin-bottom:3px}
+.tip .r{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:2px;color:#cfe5df}
+.tip .r i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.tip .r b{color:#fff;font-variant-numeric:tabular-nums}
+.tip small{display:block;color:#cfe5df;margin-top:3px}
+details.table-view{margin-top:10px;font-size:.8125rem}
+details.table-view summary{cursor:pointer;font-weight:600;color:var(--accent-strong)}
+
+/* Tables */
+.tscroll{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:.8125rem}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #e9f0ed;vertical-align:middle}
+tr:last-child>td{border-bottom:0}
+thead th{position:sticky;top:0;z-index:1;background:var(--surface-2);font-weight:650;color:var(--ink-2);white-space:nowrap}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tbody tr:hover{background:var(--surface-2)}
+tr.sel{background:var(--accent-soft)!important}
+thead th button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
+thead th button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+thead th svg{width:10px;height:10px;opacity:.75}
+td button.link{all:unset;cursor:pointer;color:var(--accent-strong);font-weight:600}
+td button.link:hover{text-decoration:underline}
+td button.link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.best{font-weight:700}
+
+/* Score + stations */
+.two{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+.two.flip{grid-template-columns:340px minmax(0,1fr)}
+.lead{font-size:.9375rem;margin-bottom:10px;max-width:70ch}
+.plot{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.75rem;color:var(--ink-2);margin-top:6px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.legend i.line{height:3px;width:14px}
+.legend i.dot{border-radius:50%}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.tools input[type=search]{max-width:280px}
+#stationtable-wrap{max-height:430px}
+
+/* Forecast */
+.try-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.form .wide{grid-column:1/-1}
+.form .actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.status{min-height:1.3em;font-size:.8125rem}
+.status.ok{color:var(--accent-strong);font-weight:600}
+.status.bad{color:var(--error);font-weight:600}
+.result{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;display:grid;gap:10px}
+.result .val{font-size:2.25rem;font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.result .head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px}
+#cityresult .tscroll{max-height:320px}
+input[type=file]{font-size:.8125rem;font-weight:400;max-width:100%}
+
+/* Guide */
+.defs{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,70ch);gap:9px 18px;margin:0;font-size:.875rem}
+.defs dt{font-weight:650}
+.defs dd{margin:0;color:var(--ink-2)}
+.dl-list{display:flex;flex-wrap:wrap;gap:8px}
+.stack{display:grid;gap:10px}
+footer{color:var(--muted);font-size:.8125rem;padding:2px 2px 0}
+
+@media(max-width:1120px){
+  .cities{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .explore-grid{grid-template-columns:minmax(0,1fr)}
+  .two,.two.flip{grid-template-columns:minmax(0,1fr)}
+  .two .plot-col{max-width:420px}
+  .try-grid{grid-template-columns:minmax(0,1fr)}
+  .modes{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .honesty{display:none}
+  .topbar-in{gap:10px;padding:0 12px;flex-wrap:wrap;padding-block:6px}
+  .topbar{position:static}
+  .daybar{position:static}
+  .wrap{padding:12px 12px 32px}
+  .panel{padding:14px}
+  .daybar select{flex:1 1 100%}
+  .day-summary{flex-basis:100%;order:3}
+  .defs{grid-template-columns:minmax(0,1fr);gap:2px}
+  .defs dd{margin-bottom:8px}
+  .tips button{margin-left:0}
+}
+@media(max-width:520px){
+  .modes{grid-template-columns:minmax(0,1fr)}
+  .cities{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .form{grid-template-columns:minmax(0,1fr)}
+  .figure .val{font-size:2.25rem}
+  .dates input{width:118px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</style>
 </head>
 <body>
-  <header class="hero">
-    <div class="hero-shell">
-      <div class="hero-copy">
-        <div class="eyebrow">AQI Prediction · Research Demonstration</div>
-        <h1>Air quality, one day ahead.</h1>
-        <p class="hero-lead">Explore saved predictions and station observations across eight Indian cities. Select a model, inspect the trend, then try a forecast with your own readings.</p>
-        <div class="hero-actions"><a class="primary" href="#explore">Explore the dashboard ↓</a><a class="secondary" href="#tryforecast" onclick="document.getElementById('next_day').click()">Try a prediction →</a></div>
-        <div class="hero-facts"><span><b>8</b> Indian cities</span><span><b>107</b> configured stations</span><span><b>2025–26</b> historical backtests</span></div>
-      </div>
-      <div class="hero-preview" aria-live="polite">
-        <div class="preview-top"><span>SELECTED MODEL OUTPUT</span><span class="preview-label" id="hero-context">Historical example</span></div>
-        <div class="preview-place" id="hero-place">Choose a station</div>
-        <div class="preview-number"><span id="hero-value">—</span><small>AQI</small></div>
-        <div class="preview-foot"><span id="hero-date">Saved UTC day</span><span>Not a live reading</span></div>
-      </div>
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">AQI Forecast Studio</div>
+    <nav class="tabs" role="tablist" aria-label="Dashboard sections">
+      <button role="tab" data-view="explore" aria-selected="true">Explore results</button>
+      <button role="tab" data-view="forecast" aria-selected="false">Try a forecast</button>
+      <button role="tab" data-view="accuracy" aria-selected="false">How accurate?</button>
+      <button role="tab" data-view="guide" aria-selected="false">Guide</button>
+    </nav>
+    <span class="honesty">Past test data, not live AQI</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <p id="loading" class="panel empty" role="status">Loading saved results…</p>
+
+  <!-- Explore -->
+  <div class="view" id="view-explore" hidden>
+    <div class="tips" id="tips">
+      <ol>
+        <li>Pick a model and a city</li>
+        <li>Click any day on the chart, or press play</li>
+        <li>Compare the model with what the station measured</li>
+      </ol>
+      <button id="tipsclose" type="button">Got it, hide this</button>
     </div>
-  </header>
-  <main class="wrap">
-    <nav class="demo-nav" aria-label="Dashboard sections"><a href="#explore">01 · Select</a><a href="#chartpanel">02 · Explore graph</a><a href="#stationspanel">03 · Stations</a><a href="#tryforecast" onclick="document.getElementById('next_day').click()">04 · Try prediction</a><a href="#pairedcomparison" id="pairednav" hidden>Model comparison</a></nav>
-    <section class="control-panel" id="explore">
-      <div class="section-heading"><div><span class="section-kicker">01 / Start here</span><h2>Choose a model and location</h2></div><p>Switch between historical estimates and next-day backtests, then select a city and station.</p></div>
-      <div class="mode-tabs" role="group" aria-label="Prediction mode"><button id="same_day" class="active" disabled>Same-day estimate</button><button id="same_day_env" disabled>Environment only</button><button id="next_day" disabled>Next-day forecast</button><button id="next_day_2026" hidden>Weather-assisted forecast</button></div>
-      <div class="location-row"><label>City<select id="city" aria-label="City"></select></label><label>Monitoring station<select id="station" aria-label="Station"></select></label></div>
-      <div class="notice" id="notice">Historical demonstration data · Not live AQI</div>
+
+    <section class="panel" aria-label="Choose what to view">
+      <div class="modes" id="modes" role="radiogroup" aria-label="Model"></div>
+      <p class="mode-info" id="modeinfo"></p>
+      <div class="cities" id="cities" role="group" aria-label="City"></div>
     </section>
 
-    <p id="description" class="caption"></p>
-    <section class="metrics" aria-label="Selected result">
-      <div class="card"><small>Model estimate</small><div class="number" id="value">—</div><div class="sub" id="date"></div></div>
-      <div class="card"><small>Observed AQI</small><div class="number" id="actual">—</div><div class="sub">Ground-station measurement</div></div>
-      <div class="card"><small>Station error · RMSE</small><div class="number" id="rmse">—</div><div class="sub" id="model"></div></div>
-      <div class="card"><small>Prediction interval</small><div class="number" style="font-size:23px" id="interval">—</div><div class="sub" id="coverage"></div></div>
+    <section class="daybar" aria-label="Selected station and day">
+      <select id="station" aria-label="Station"></select>
+      <div class="nav">
+        <button class="btn icon" id="prevday" type="button" aria-label="Previous day"></button>
+        <input type="date" id="day" aria-label="Selected day (UTC)">
+        <button class="btn icon" id="nextday" type="button" aria-label="Next day"></button>
+        <button class="btn icon" id="play" type="button" aria-label="Play through the days"></button>
+      </div>
+      <input type="range" id="slider" min="0" max="0" step="1" aria-label="Move through the days">
+      <div class="day-summary" id="daysummary" role="status" aria-live="off"></div>
     </section>
 
-    <section class="panel" id="filters"><div class="section-heading"><div><span class="section-kicker">Explore data</span><h2>Choose a view and date range</h2></div><p>Dates are UTC. City view averages the stations available on each day.</p></div>
-      <div class="filter-grid"><label>Chart view<select id="scope"><option value="station">Selected station</option><option value="city">City station average</option></select></label><label>From date<input type="date" id="fromdate"></label><label>To date<input type="date" id="todate"></label><label>Table date<input type="date" id="comparedate"></label></div>
-      <label hidden>Yesterday baseline<select id="baseline"><option value="yes">Show</option><option value="no">Hide</option></select></label>
-      <div class="filter-actions"><button class="action" id="resetdates">Reset date range</button><button class="action" id="exportrows">Download filtered CSV</button></div>
-      <details class="city-summary"><summary>Cities at a glance</summary><div id="cityoverview" class="metrics"></div></details>
-    </section>
-
-    <section class="panel" id="chartpanel"><div class="section-heading"><div><span class="section-kicker">02 / Understand the trend</span><h2 id="charttitle">Daily AQI</h2></div><p>Move over the graph for daily values. Use arrow keys when the chart is focused.</p></div>
-      <div class="chart-grid"><div class="chart-visual"><div class="chart-scroll"><div class="chart-inner"><svg id="plot" viewBox="0 0 1050 370" tabindex="0" role="img" aria-label="Interactive daily AQI graph. Use left and right arrow keys to inspect dates."></svg><div id="charttooltip" class="chart-tooltip" hidden></div></div></div><p class="caption" id="seriesdate"></p><div class="legend" id="activelegend"></div><span id="bandlegend" hidden></span></div>
-      <aside class="chart-side"><h3>Show on graph</h3><p class="caption">Toggle each line. Values update for the day under your pointer.</p><div class="series-table-wrap"><table id="seriestable" aria-label="Graph series controls"></table></div></aside></div>
-      <div id="charthoverstatus" class="sr-only" role="status" aria-live="polite"></div><p class="caption" id="source"></p>
-    </section>
-
-    <section class="panel" id="stationspanel"><div class="section-heading"><div><span class="section-kicker">03 / Compare locations</span><h2>Station results</h2></div><p>Click a station to update the cards and graph.</p></div>
-      <p class="caption" id="stationcaption"></p><div class="station-tools"><label>Find station<input type="search" id="stationsearch" placeholder="Search by station name"></label><label>Sort stations<select id="stationsort"><option value="pred">Highest predicted AQI</option><option value="name">Station name</option><option value="error">Lowest RMSE</option></select></label><span class="count" id="stationcount"></span></div>
-      <div class="table-scroll"><table id="stationtable"></table></div>
-    </section>
-
-    <div class="forecast-grid">
-      <section class="panel" id="tryforecast" hidden><span class="section-kicker">04 / Interactive demo</span><h2>Predict next-day AQI</h2><p class="caption">Use 28 earlier daily readings for the selected station. This is an experimental estimate, not a live observation.</p>
-        <form id="forecastform" class="forecast-form"><label>Last observed UTC day<input id="observeddate" type="date" required></label><label>Observed AQI<input id="observedaqi" type="number" min="0" max="500" step="any" required></label><label class="wide">Import 28 readings (CSV: date,aqi)<input type="file" id="historyfile" accept=".csv"></label><label class="wide" id="historylabel" hidden>Previous 27 AQI values, oldest first<textarea id="previousaqi" rows="3" placeholder="27 values separated by commas"></textarea></label><div class="form-actions"><button type="button" class="action" id="exampleforecast">Load sample readings</button><button type="submit" class="action primary">Estimate next day</button></div></form><p class="caption result-note" id="forecastresult" role="status"></p>
-      </section>
-      <section class="panel" id="cityforecastpanel" hidden><span class="section-kicker">04 / City outlook</span><h2>Predict AQI for a city</h2><p class="caption">Choose a historical observation date. Stations with 28 consecutive earlier readings contribute to the city average.</p>
-        <form id="cityforecastform" class="forecast-form"><label>Observation date (UTC)<input id="cityobserveddate" type="date" required></label><div class="form-actions"><button type="button" class="action" id="cityexample">Find best sample</button><button type="submit" class="action primary">Forecast city</button></div></form><p id="cityforecastresult" class="caption result-note" role="status"></p><div class="city-forecast-table"><table id="cityforecaststations"></table></div>
+    <div class="explore-grid">
+      <section class="panel answer" id="answer" aria-label="Result for the selected day"></section>
+      <section class="panel" aria-label="Daily AQI chart">
+        <div class="panel-head" style="margin-bottom:8px">
+          <div><h2 id="charttitle">Daily AQI</h2>
+          <p>Hover to read values. Click to select a day. Drag across the chart to zoom in.</p></div>
+        </div>
+        <div class="chart-tools">
+          <div class="seg" id="ranges" role="group" aria-label="Date range"></div>
+          <div class="dates"><input type="date" id="from" aria-label="Start date">to<input type="date" id="to" aria-label="End date"></div>
+        </div>
+        <div class="chips" id="serieschips" role="group" aria-label="Lines shown on the chart"></div>
+        <div id="plotwrap"><svg id="plot" tabindex="0" role="img" aria-label="Daily AQI chart. Left and right arrow keys move the selected day. Shift moves a week."></svg></div>
+        <details class="table-view" id="tableview"><summary>Show these values as a table</summary><div class="tscroll" style="max-height:320px;margin-top:8px"><table id="daytable"></table></div></details>
+        <p class="small muted" id="chartnote" style="margin-top:6px"></p>
       </section>
     </div>
-    <section class="panel" id="pairedcomparison" hidden><span class="section-kicker">Model check</span><h2>Historical model comparison · 2026</h2><label hidden><input type="checkbox" id="comparegru" checked> Show GRU on the 2026 weather chart</label><p class="caption">Saved 2026 station-days only. Models are compared on paired observations. Lower RMSE and MAE indicate smaller errors. This is not a prospective October–December score.</p><div class="table-scroll"><table id="pairedscores"></table></div></section>
-    <footer>AQI Prediction Project · Historical demonstration data · Daily dates in UTC</footer>
-  </main>
+
+    <section class="panel" aria-label="Accuracy for this selection">
+      <div class="panel-head"><div><h2 id="scoretitle">How the model did</h2><p id="scoresub"></p></div></div>
+      <div class="two">
+        <div>
+          <p class="lead" id="scorelead"></p>
+          <div class="tscroll"><table id="scoretable"></table></div>
+          <p class="small muted" id="scorenote" style="margin-top:8px"></p>
+          <div id="worst" style="margin-top:8px"></div>
+        </div>
+        <div class="plot-col">
+          <h3>Model against measurement</h3>
+          <svg class="plot" id="scatter" role="img" aria-label="Scatter plot of the model value against the measured AQI for each day. The table beside it holds the summary numbers."></svg>
+          <p class="small muted">Each dot is a day; click one to select it. Dots on the line are perfect. Above the line, the model was too low.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Stations in this city">
+      <div class="panel-head">
+        <div><h2 id="stationstitle">Stations</h2><p id="stationssub"></p></div>
+        <button class="btn" id="download" type="button"></button>
+      </div>
+      <div class="two flip">
+        <div class="plot-col">
+          <svg class="plot" id="map" role="img" aria-label="Station positions coloured by measured AQI on the selected day. The table beside it lists the same stations."></svg>
+          <ul class="band-key" id="mapkey" aria-label="AQI bands" style="margin-top:8px;border:0;padding-top:0"></ul>
+          <p class="small muted" style="margin-top:6px">Positions come from station coordinates, with no base map. Colour shows the measured band; hollow dots have no reading that day.</p>
+        </div>
+        <div>
+          <div class="tools"><input type="search" id="stationsearch" placeholder="Find a station" aria-label="Find a station"><span class="small muted" id="stationcount"></span></div>
+          <div class="tscroll" id="stationtable-wrap"><table id="stationtable"></table></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Try a forecast -->
+  <div class="view" id="view-forecast" hidden>
+    <p class="note prose" id="snapshotnote" hidden>This saved copy of the dashboard has no model attached, so these forms can't run. Download the local demo to generate forecasts.</p>
+    <div class="panel"><h2>Run the frozen model yourself</h2><p class="small muted prose" id="tryintro" style="margin-top:4px"></p></div>
+    <div class="try-grid">
+      <section class="panel" aria-label="City forecast">
+        <h2>Forecast a whole city</h2>
+        <p class="small muted">Uses readings already saved in the project. A station joins the average only if it has 28 straight valid days before the forecast.</p>
+        <form class="form" id="cityform">
+          <label class="field">City<select id="cityf"></select></label>
+          <label class="field">Last day of readings (2025)<input type="date" id="cityfdate" min="2025-01-01" max="2025-12-30" required></label>
+          <div class="actions">
+            <button class="btn primary" type="submit" id="cityfgo">Forecast the next day</button>
+            <button class="btn" type="button" id="cityfbest">Find the date with most stations</button>
+          </div>
+          <p class="status wide" id="cityfstatus" role="status"></p>
+        </form>
+        <div id="cityresult"></div>
+      </section>
+      <section class="panel" aria-label="Station forecast from your readings">
+        <h2>Forecast one station from your readings</h2>
+        <p class="small muted">Give the model 28 daily AQI values in a row. Load a sample, import a CSV, or type your own.</p>
+        <form class="form" id="stationform">
+          <label class="field">City<select id="stf-city"></select></label>
+          <label class="field">Station<select id="stf-station"></select></label>
+          <label class="field">Date of the last reading (UTC)<input type="date" id="stf-date" required></label>
+          <label class="field">Import CSV with date and aqi columns<input type="file" id="stf-file" accept=".csv,text/csv"></label>
+          <label class="field wide">28 AQI readings, oldest first<textarea id="stf-values" rows="4" placeholder="Separate values with commas or spaces"></textarea></label>
+          <div class="wide"><svg class="plot" id="stf-preview" role="img" aria-label="Preview of the readings you entered"></svg></div>
+          <p class="status wide" id="stf-status" role="status"></p>
+          <div class="actions">
+            <button class="btn primary" type="submit" id="stf-go" disabled>Forecast the next day</button>
+            <button class="btn" type="button" id="stf-sample">Load sample readings</button>
+          </div>
+        </form>
+        <div id="stationresult"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Accuracy -->
+  <div class="view" id="view-accuracy" hidden>
+    <section class="panel">
+      <div class="panel-head"><div><h2>Did each model beat a simple guess?</h2>
+        <p>The simple guess repeats yesterday's reading. RMSE is the size of a typical miss in AQI points, with large misses counting more, so lower is better.</p></div></div>
+      <p class="note" style="margin-bottom:10px">Each row has its own test period and stations. Compare a model with its own simple guess, not with another row.</p>
+      <div class="tscroll"><table id="testtable"></table></div>
+      <div class="legend"><span><i class="dot" style="background:var(--model)"></i>Model</span><span><i class="dot" style="background:var(--yesterday)"></i>Yesterday's reading</span></div>
+    </section>
+
+    <section class="panel" id="weathersection">
+      <div class="panel-head"><div><h2>2026: does adding weather forecasts help?</h2><p id="weathersub"></p></div></div>
+      <div class="seg" id="weathercity" role="group" aria-label="City" style="margin-bottom:12px"></div>
+      <div class="two">
+        <div><svg class="plot" id="weatherbars" role="img" aria-label="RMSE by model for the chosen city. The table lists sharp-change results."></svg></div>
+        <div><h3 style="margin-bottom:6px">Catching sharp changes of 50+ points</h3><div class="tscroll"><table id="weathertable"></table></div></div>
+      </div>
+      <p class="lead" id="weatherverdict" style="margin:12px 0 0"></p>
+    </section>
+
+    <section class="panel" id="attentionsection">
+      <div class="panel-head"><div><h2>Does attention improve accuracy?</h2>
+        <p>Right of zero, the attention model beat the same model without attention. Bars show 95% intervals. They cover test-week sampling only, not training seeds, and are unadjusted across the 36 comparisons.</p></div></div>
+      <div class="seg" id="protocols" role="group" aria-label="Test design" style="margin-bottom:10px"></div>
+      <p class="small muted" id="protocolnote" style="margin-bottom:6px"></p>
+      <svg class="plot" id="attentionplot" role="img" aria-label="RMSE gain for each attention variant on two input sets"></svg>
+      <div class="legend"><span><i class="dot" style="background:var(--measured)"></i>SWT-w7: satellite, weather, day of year</span><span><i class="dot" style="background:var(--yesterday)"></i>SW-w7: satellite and weather</span></div>
+      <p class="lead" style="margin:12px 0 0">Some results flip with the input set, so these results don't support a general claim that attention improves accuracy.</p>
+    </section>
+
+    <section class="panel" id="faithsection">
+      <div class="panel-head"><div><h2>Is attention a faithful explanation?</h2>
+        <p>We replaced each input and measured how much the frozen model's output moved, then checked how well each method's ranking of inputs agreed with that. 1 means perfect agreement. Sampled 300 rows per model.</p></div></div>
+      <div class="tscroll"><table id="faithtable"></table></div>
+      <p class="lead" id="faithlead" style="margin:12px 0 0"></p>
+    </section>
+
+    <section class="panel" id="prospectivesection">
+      <div class="panel-head"><div><h2>October to December 2026 evaluation</h2><p id="prosub"></p></div></div>
+      <p class="prose" id="protext"></p>
+      <dl class="facts" id="profacts" style="max-width:520px;margin-top:10px"></dl>
+    </section>
+  </div>
+
+  <!-- Guide -->
+  <div class="view" id="view-guide" hidden>
+    <section class="panel stack">
+      <h2>What this dashboard shows</h2>
+      <p class="prose">We trained models to predict the Air Quality Index at 107 monitoring stations across eight Indian cities. Everything in Explore comes from test periods the models were not fitted on, so you can see how they would have done. None of it is today's air quality. For current readings, use the CPCB portal.</p>
+    </section>
+    <section class="panel stack">
+      <h2>AQI bands</h2>
+      <p class="small muted prose">The Central Pollution Control Board's bands, used for every colour on this page.</p>
+      <div class="tscroll" style="max-width:560px"><table id="bandtable"></table></div>
+    </section>
+    <section class="panel stack">
+      <h2>Words used here</h2>
+      <dl class="defs">
+        <dt>Forecast / next-day</dt><dd>Uses only what was known before the target day. It could have been issued in advance.</dd>
+        <dt>Estimate / same-day</dt><dd>Uses satellite and weather data from the target day itself, so it can only be produced afterwards. It is not a forecast.</dd>
+        <dt>Measured</dt><dd>The station's AQI from CPCB exports. Each date's value is the 24-hour reading at the end of that UTC day, which is 05:00 IST the next morning.</dd>
+        <dt>Yesterday's reading</dt><dd>The simplest possible forecast: tomorrow equals today. A useful model has to beat it.</dd>
+        <dt>Typical miss (MAE)</dt><dd>The average distance between the model and the measurement, in AQI points.</dd>
+        <dt>RMSE</dt><dd>Like the typical miss, but large misses count more. This is the main score in the project report.</dd>
+        <dt>90% range</dt><dd>A band meant to contain the measurement on about 90% of days, set using calibration months before the test. It is available for single stations only.</dd>
+        <dt>Bias</dt><dd>The average signed miss. Negative means the model tends to read too low.</dd>
+        <dt>City average</dt><dd>The plain mean of whichever stations reported that day. It is not an official city AQI, and the set of stations can change from day to day.</dd>
+        <dt>Backtest / held-out</dt><dd>Scoring a frozen model on past data it wasn't fitted on. It is not the same as running live.</dd>
+      </dl>
+    </section>
+    <section class="panel stack" id="downloads">
+      <h2>Download the results</h2>
+      <p class="small muted prose">The saved files behind these pages.</p>
+      <div class="dl-list">
+        <a class="btn" href="/api/download/2025/metrics">2025 scores</a>
+        <a class="btn" href="/api/download/2025/predictions">2025 predictions</a>
+        <a class="btn" href="/api/download/2026/metrics">2026 scores</a>
+        <a class="btn" href="/api/download/2026/cities">2026 scores by city</a>
+        <a class="btn" href="/api/download/2026/spikes">2026 sharp changes</a>
+        <a class="btn" href="/api/download/2026/predictions">2026 predictions</a>
+        <a class="btn" href="/api/download/research/report">Results report</a>
+      </div>
+    </section>
+    <section class="panel stack" id="publicfiles" hidden>
+      <h2>Local demo and reports</h2>
+      <p class="small muted prose">The local demo runs the forecast forms on your own computer and needs Python 3.13. The reports explain the method and the results.</p>
+      <div class="dl-list">
+        <a class="btn" href="AQI_Local_Demo.zip" download>Local demo (ZIP)</a>
+        <a class="btn" href="AQI_Methodology_Submission.pdf">Methodology (PDF)</a>
+        <a class="btn" href="AQI_Results_and_Discussion_Submission.pdf">Results and discussion (PDF)</a>
+      </div>
+    </section>
+  </div>
+
+  <footer>AQI Prediction Project. Saved historical test results and frozen models. Daily dates are UTC. Not live AQI and not health advice.</footer>
+</main>
+<div class="tip" id="tip" hidden></div>
 
 <script>/* SNAPSHOT */
 
-let state,mode='same_day',initialized=false;const $=id=>document.getElementById(id);const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = id => document.getElementById(id);
+const esc = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const finite = Number.isFinite;
 
-function options(id,values,labels){const old=$(id).value;$(id).innerHTML=values.map((v,i)=>`<option value="${esc(v)}">${esc(labels?labels[i]:v)}</option>`).join('');if(values.includes(old))$(id).value=old}
+const ICON = {
+  prev: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg>',
+  next: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg>',
+  play: '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4.5 2.8v10.4a.5.5 0 0 0 .77.42l8-5.2a.5.5 0 0 0 0-.84l-8-5.2a.5.5 0 0 0-.77.42Z"/></svg>',
+  pause: '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="3.5" y="2.5" width="3.2" height="11" rx="1"/><rect x="9.3" y="2.5" width="3.2" height="11" rx="1"/></svg>',
+  down: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v8M4.5 7.5 8 11l3.5-3.5M3 13.5h10"/></svg>',
+  up: '<svg viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M5 2 9 8H1z"/></svg>',
+  dn: '<svg viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M5 8 1 2h8z"/></svg>',
+};
 
-function cities(){$('next_day_2026').hidden=!state.modes.next_day_2026;const d=state.modes[mode];options('city',[...new Set(d.rows.map(r=>r.city))].sort());stations()}
-
-function stations(){const rows=state.modes[mode].rows.filter(r=>r.city===$('city').value);const map=new Map(rows.map(r=>[r.station_id,r.station_name||r.station_id]));options('station',[...map.keys()],[...map.values()]);render()}
-
-const demoDescriptions={same_day:'Historical same-day estimate using weather, satellite observations and previous AQI. Same-day inputs may reflect the target day.',same_day_env:'Historical same-day estimate using weather and satellite observations. Same-day inputs may reflect the target day.',next_day:'Historical 2025 next-day backtest using 28 earlier daily AQI readings.',next_day_2026:'Historical 2026 next-day backtest using earlier readings and archived weather forecasts.'};
-function demoModel(id){return {same_day:'Ridge regression',same_day_env:'Ridge regression',next_day:'GRU',next_day_2026:'XGBoost'}[id]||'AQI model';}
-let render;
-
-const chartVisibility={y:true,pred:true,reference:true,gru_pred:true,interval:true};
-const chartSeries=[
- {key:'y',name:'Observed AQI',color:'#123239',note:'Ground-station observation'},
- {key:'pred',name:'Selected model',color:'#087f76',note:'Prediction for the selected mode'},
- {key:'reference',name:'Yesterday baseline',color:'#bd792d',note:'Previous calendar-day AQI'},
- {key:'gru_pred',name:'GRU forecast',color:'#8455b3',note:'GRU comparison on the same dates'},
- {key:'interval',name:'Prediction interval',color:'#b8ded7',note:'Prediction range for an individual station'}
+// CPCB National AQI bands. Colours are for marks; the band name is always shown too.
+const BANDS = [
+  {name: 'Good', lo: 0, hi: 50, fill: '#4caf6a', ink: '#0f2a1a', meaning: 'Minimal impact'},
+  {name: 'Satisfactory', lo: 51, hi: 100, fill: '#a7cf5a', ink: '#22300c', meaning: 'Minor breathing discomfort for sensitive people'},
+  {name: 'Moderate', lo: 101, hi: 200, fill: '#f2ce3e', ink: '#3a2e04', meaning: 'Breathing discomfort for people with lung or heart disease, children and older adults'},
+  {name: 'Poor', lo: 201, hi: 300, fill: '#f2963a', ink: '#3a1f03', meaning: 'Breathing discomfort for most people on prolonged exposure'},
+  {name: 'Very poor', lo: 301, hi: 400, fill: '#d13f2f', ink: '#fff', meaning: 'Respiratory illness on prolonged exposure'},
+  {name: 'Severe', lo: 401, hi: 500, fill: '#8f2424', ink: '#fff', meaning: 'Affects healthy people; serious impact on those with existing disease'},
 ];
-let chartContext=null, chartHoverTime=null;
-const utcDateLabel=date=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(date));
-function chartAvailable(series,rows){
- return series.key==='interval'?rows.some(r=>Number.isFinite(r.lower)&&Number.isFinite(r.upper)):
-  (series.key!=='gru_pred'||mode==='next_day_2026')&&rows.some(r=>Number.isFinite(r[series.key]));
-}
-function chartValue(row,key){
- return key==='interval'?(row&&Number.isFinite(row.lower)&&Number.isFinite(row.upper)?`${fmt(row.lower)} – ${fmt(row.upper)}`:'Unavailable'):
-  row&&Number.isFinite(row[key])?fmt(row[key]):'No observation';
-}
-function chartControls(rows){
- const last=rows.at(-1), date=last?.date;
- $('seriesdate').textContent=date?`Values for ${utcDateLabel(date)}. Hover over the graph to inspect another day.`:'No observations in this date range.';
- $('seriestable').innerHTML='<thead><tr><th scope="col">Show</th><th scope="col">Graph series</th><th scope="col">AQI on selected day</th></tr></thead><tbody>'+chartSeries.map(s=>{
-  const available=chartAvailable(s,rows);
-  return `<tr class="${available?'':'series-unavailable'}"><td><input type="checkbox" data-series="${s.key}" aria-label="Show ${esc(s.name)}" ${available&&chartVisibility[s.key]?'checked':''} ${available?'':'disabled'}></td><th scope="row"><span class="series-swatch" style="background:${s.color}"></span>${esc(s.name)}<span class="series-note">${esc(s.note)}</span></th><td id="seriesvalue-${s.key}">${available?esc(chartValue(last,s.key)):'Unavailable in this view'}</td></tr>`;
- }).join('')+'</tbody>';
- $('activelegend').innerHTML=chartSeries.filter(s=>chartAvailable(s,rows)&&chartVisibility[s.key]).map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')||'<span>No series selected. Turn on a series in the table above.</span>';
-}
-function hideChartHover(){
- $('charttooltip').hidden=true;
- const hover=$('chartcrosshair');if(hover)hover.setAttribute('visibility','hidden');
- chartHoverTime=null;
- if(chartContext){const last=chartContext.rows.at(-1);$('seriesdate').textContent=last?`Values for ${utcDateLabel(last.date)}. Hover over the graph to inspect another day.`:'No observations in this date range.';
-  for(const s of chartSeries){const cell=$('seriesvalue-'+s.key);if(cell&&chartAvailable(s,chartContext.rows))cell.textContent=chartValue(last,s.key);}}
-}
-function inspectChartDay(time){
- const c=chartContext;if(!c)return;
- time=Math.max(c.lo,Math.min(c.hi,time));chartHoverTime=time;
- const date=new Date(time).toISOString().slice(0,10),row=c.byDate.get(date);
- const visible=chartSeries.filter(s=>chartAvailable(s,c.rows)&&chartVisibility[s.key]);
- const parts=visible.map(s=>`<div class="tooltip-row"><span><i class="series-swatch" style="background:${s.color}"></i>${esc(s.name)}</span><b>${esc(chartValue(row,s.key))}</b></div>`).join('');
- $('charttooltip').innerHTML=`<strong>${esc(utcDateLabel(date))}</strong>${row?parts||'<p>No series selected.</p>':'<p>No paired observations on this date.</p>'}${row?.count!=null?`<small>${row.count} available stations · city mean</small>`:''}`;
- $('charttooltip').hidden=false;
- const px=c.x(time), tip=$('charttooltip');
- tip.style.left=Math.max(8,Math.min(c.W-tip.offsetWidth-8,px+14))+'px';tip.style.top='12px';
- $('chartcrosshair').innerHTML=`<line x1="${px}" x2="${px}" y1="${c.T}" y2="${c.H-c.B}" stroke="#60787d" stroke-dasharray="3 3"/>`+visible.filter(s=>s.key!=='interval'&&Number.isFinite(row?.[s.key])).map(s=>`<circle cx="${px}" cy="${c.y(row[s.key])}" r="4" fill="${s.color}" stroke="white" stroke-width="1.5"/>`).join('');
- $('chartcrosshair').setAttribute('visibility','visible');
- $('seriesdate').textContent=`Values for ${utcDateLabel(date)}${row?'':' · no paired observations'}`;
- for(const s of chartSeries){const cell=$('seriesvalue-'+s.key);if(cell&&chartAvailable(s,c.rows))cell.textContent=chartValue(row,s.key);}
- $('charthoverstatus').textContent=`${utcDateLabel(date)}. ${row?visible.map(s=>s.name+': '+chartValue(row,s.key)).join('. '):'No paired observations.'}`;
-}
-function draw(rows){
- const previousHover=chartHoverTime;
- chartContext=null;hideChartHover();chartControls(rows);
- if(!rows.length){$('plot').innerHTML='<text x="20" y="60">No paired observations in this date range.</text>';return;}
- const W=Math.max(640,$('plot').getBoundingClientRect().width),H=370,L=54,R=20,T=25,B=64;
- $('plot').setAttribute('viewBox',`0 0 ${W} ${H}`);
- const lo=Date.parse(rows[0].date.slice(0,10)),hi=Date.parse(rows.at(-1).date.slice(0,10));
- const span=Math.max(86400000,hi-lo),x=t=>L+(typeof t==='number'?t-lo:Date.parse(t)-lo)/span*(W-L-R);const values=rows.flatMap(r=>[r.y,r.pred,r.reference,r.gru_pred,r.upper]).filter(Number.isFinite);const scaleMax=Math.min(500,Math.max(150,Math.ceil(Math.max(0,...values)/50)*50));const tick=scaleMax<=250?50:100,y=v=>H-B-v/scaleMax*(H-T-B);
- let svg='<text x="12" y="16" fill="#60787d" font-size="11">AQI</text>';
- for(let v=0;v<=scaleMax;v+=tick)svg+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#e5eeeb"/><text x="${L-10}" y="${y(v)+4}" text-anchor="end" fill="#60787d" font-size="12">${v}</text>`;
- // Month boundaries and labels use UTC, independent of the browser's timezone.
- let month=new Date(lo);month.setUTCDate(1);month.setUTCHours(0,0,0,0);
- while(month.getTime()<=hi){
-  const start=month.getTime(),next=Date.UTC(month.getUTCFullYear(),month.getUTCMonth()+1,1);
-  if(start>=lo)svg+=`<line x1="${x(start)}" x2="${x(start)}" y1="${T}" y2="${H-B}" stroke="#edf2f1"/>`;
-  const center=(Math.max(start,lo)+Math.min(next,hi))/2;
-  const label=new Intl.DateTimeFormat('en-GB',{month:'short',timeZone:'UTC'}).format(month);
-  svg+=`<text class="month-tick" x="${x(center)}" y="${H-B+22}" text-anchor="middle" fill="#60787d" font-size="12">${label}</text>`;
-  month=new Date(next);
- }
- const years=new Date(lo).getUTCFullYear()===new Date(hi).getUTCFullYear()?new Date(lo).getUTCFullYear():`${new Date(lo).getUTCFullYear()}–${new Date(hi).getUTCFullYear()}`;
- svg+=`<text x="${(L+W-R)/2}" y="${H-10}" text-anchor="middle" fill="#60787d" font-size="11">${years} · UTC dates</text>`;
- if(chartVisibility.interval){let groups=[],g=[];
-  for(const r of rows){if(g.length&&(Date.parse(r.date)-Date.parse(g.at(-1).date)>86400000||!Number.isFinite(r.lower)||!Number.isFinite(r.upper))){groups.push(g);g=[];}if(Number.isFinite(r.lower)&&Number.isFinite(r.upper))g.push(r);}if(g.length)groups.push(g);
-  for(const group of groups)svg+=`<polygon data-series="interval" points="${group.map(r=>x(r.date)+','+y(r.lower)).join(' ')} ${[...group].reverse().map(r=>x(r.date)+','+y(r.upper)).join(' ')}" fill="#dceee9"/>`;
- }
- for(const s of chartSeries.filter(s=>s.key!=='interval'&&chartVisibility[s.key]&&chartAvailable(s,rows))){
-  let path='',prev=null;
-  for(const r of rows){if(!Number.isFinite(r[s.key])){prev=null;continue;}const gap=prev===null||Date.parse(r.date)-prev>86400000;path+=(gap?'M':'L')+x(r.date)+','+y(r[s.key]);prev=Date.parse(r.date);}
-  svg+=`<path data-series="${s.key}" d="${path}" fill="none" stroke="${s.color}" stroke-width="${s.key==='reference'?1.5:2.4}" ${s.key==='reference'?'stroke-dasharray="5 4"':''}/>`;
-  if(rows.length===1)svg+=`<circle cx="${x(rows[0].date)}" cy="${y(rows[0][s.key])}" r="4" fill="${s.color}"/>`;
- }
- svg+='<g id="chartcrosshair" visibility="hidden" pointer-events="none"></g>';
- $('plot').innerHTML=svg;
- chartContext={rows,lo,hi,W,H,L,R,T,B,x,y,byDate:new Map(rows.map(r=>[r.date.slice(0,10),r]))};
- if(previousHover!==null&&previousHover>=lo&&previousHover<=hi)inspectChartDay(previousHover);
-}
-$('seriestable').onchange=event=>{
- const key=event.target.dataset.series;if(!key)return;chartVisibility[key]=event.target.checked;
- if(key==='reference')$('baseline').value=event.target.checked?'yes':'no';
- if(key==='gru_pred')$('comparegru').checked=event.target.checked;
- render();
+const THRESHOLDS = [0, 50, 100, 200, 300, 400, 500];
+function band(v) { if (!finite(v)) return null; const r = Math.round(v); return BANDS.find(b => r <= b.hi) || BANDS[5]; }
+function bandChip(v) { const b = band(v); return b ? `<span class="band-chip" style="background:${b.fill};color:${b.ink}">${b.name}</span>` : '<span class="muted">No data</span>'; }
+const bandKeyItems = () => BANDS.map(b => `<li><i style="background:${b.fill}"></i>${b.name} ${b.lo}–${b.hi}</li>`).join('');
+function numChip(v) { const b = band(v); return b ? `<span class="num-chip" style="background:${b.fill};color:${b.ink}">${Math.round(v)}</span>` : '<span class="num-chip">–</span>'; }
+
+// Plain labels for each saved test. Scores and model names still come from the saved runs.
+const MODE_INFO = {
+  next_day: {title: "Tomorrow, from past AQI", noun: 'forecast', short: 'Next-day forecast', text: "Predicts the next day's AQI from a station's previous 28 days of readings."},
+  next_day_2026: {title: 'Tomorrow, with weather forecasts', noun: 'forecast', short: 'Next-day forecast with weather', text: 'Predicts the next day from earlier readings plus archived 24-hour-ahead weather forecasts.'},
+  same_day: {title: 'Same day, with past AQI', noun: 'estimate', short: 'Same-day estimate', text: "Estimates a day's AQI after it ends, from that day's satellite and weather data plus the previous reading.", warn: 'It uses data from the day itself, so it is not a forecast.'},
+  same_day_env: {title: 'Same day, satellite and weather only', noun: 'estimate', short: 'Same-day estimate, no AQI history', text: "Estimates a day's AQI after it ends, using only that day's satellite and weather data.", warn: 'It uses data from the day itself, so it is not a forecast.'},
 };
-$('plot').onpointermove=event=>{
- if(!chartContext)return;const bounds=$('plot').getBoundingClientRect();
- const px=(event.clientX-bounds.left)*chartContext.W/bounds.width;
- if(px<chartContext.L||px>chartContext.W-chartContext.R){hideChartHover();return;}
- const raw=chartContext.lo+(px-chartContext.L)/(chartContext.W-chartContext.L-chartContext.R)*Math.max(86400000,chartContext.hi-chartContext.lo);
- inspectChartDay(Math.round(raw/86400000)*86400000);
-};
-$('plot').onpointerleave=hideChartHover;
-$('plot').onblur=hideChartHover;
-$('plot').onkeydown=event=>{
- if(!chartContext)return;
- if(event.key==='Escape'){hideChartHover();return;}
- if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
- event.preventDefault();const current=chartHoverTime??chartContext.lo;
- inspectChartDay(event.key==='Home'?chartContext.lo:event.key==='End'?chartContext.hi:current+(event.key==='ArrowRight'?1:-1)*86400000);
-};
+const MODE_ORDER = ['next_day', 'next_day_2026', 'same_day', 'same_day_env'];
+const SERIES = [
+  {key: 'y', name: 'Measured', color: 'var(--measured)', width: 2},
+  {key: 'pred', name: 'Model', color: 'var(--model)', width: 2},
+  {key: 'reference', name: "Yesterday's reading", color: 'var(--yesterday)', width: 1.5},
+  {key: 'gru_pred', name: 'GRU', color: 'var(--gru)', width: 1.5},
+];
 
+/* Dates: everything is a UTC calendar day string. */
+const DAY = 86400000;
+const dayMs = d => Date.parse(d + 'T00:00:00Z');
+const msDay = t => new Date(t).toISOString().slice(0, 10);
+const addDays = (d, n) => msDay(dayMs(d) + n * DAY);
+const fmtDate = (d, o = {day: 'numeric', month: 'short', year: 'numeric'}) => d ? new Intl.DateTimeFormat('en-GB', {...o, timeZone: 'UTC'}).format(new Date(dayMs(d))) : '';
+const int = v => finite(v) ? String(Math.round(v)) : '–';
+const dec = (v, d = 1) => finite(v) ? v.toFixed(d) : '–';
+const pct = v => finite(v) ? `${(100 * v).toFixed(1)}%` : '–';
+const count = v => Number(v).toLocaleString('en-IN');
 
-function filtered(){return state.modes[mode].rows.filter(r=>r.city===$('city').value&&(!$('fromdate').value||r.date.slice(0,10)>=$('fromdate').value)&&(!$('todate').value||r.date.slice(0,10)<=$('todate').value))}
-function aggregate(rows){const days=new Map();for(const r of rows){const date=r.date.slice(0,10);if(!days.has(date))days.set(date,[]);days.get(date).push(r)}return [...days].sort(([a],[b])=>a.localeCompare(b)).map(([date,g])=>({date,y:mean(g,'y'),pred:mean(g,'pred'),reference:mean(g,'reference'),gru_pred:mean(g,'gru_pred'),count:g.length}))}
-function mean(rows,key){const a=rows.filter(r=>r[key]!=null);return a.length?a.reduce((v,r)=>v+r[key],0)/a.length:null}
-function error(rows,key='pred'){return rows.length?Math.sqrt(rows.reduce((v,r)=>v+(r[key]-r.y)**2,0)/rows.length):null}
-function fmt(v,d=1){return v==null||!Number.isFinite(v)?'—':v.toFixed(d)}
-function card(title,value,note){return `<div class="card"><small>${esc(title)}</small><div class="number">${esc(value)}</div><div class="sub">${esc(note)}</div></div>`}
-render=function(){
- const d=state.modes[mode],cityRows=filtered(),isCity=$('scope').value==='city',rows=isCity?aggregate(cityRows):cityRows.filter(r=>r.station_id===$('station').value).sort((a,b)=>a.date.localeCompare(b.date)),last=rows.at(-1);
- if(!$('comparedate').value){$('comparedate').value=rows.map(r=>r.date.slice(0,10)).sort().at(-1)||''}
- $('description').textContent=demoDescriptions[mode];$('notice').textContent=mode.startsWith('same_day')?'Historical same-day estimation · Uses target-day information · Not a future forecast':`Historical ${mode==='next_day_2026'?'2026':'2025'} backtest · Saved test data, not a live or prospective forecast`;$('tryforecast').hidden=mode!=='next_day';$('cityforecastpanel').hidden=mode!=='next_day';if(!$('cityobserveddate').value)$('cityobserveddate').value=$('comparedate').value;
- $('value').textContent=fmt(last?.pred,0);$('actual').textContent=fmt(last?.y,0);$('date').textContent=last?last.date.slice(0,10)+' · UTC':'';$('hero-value').textContent=fmt(last?.pred,0);$('hero-place').textContent=isCity?$('city').value+' · station average':(last?.station_name||$('station').selectedOptions[0]?.textContent||'Selected station');$('hero-date').textContent=last?utcDateLabel(last.date)+' · UTC':'No data in selected range';$('hero-context').textContent=mode.startsWith('same_day')?'Same-day estimate':mode==='next_day'?'2025 backtest':'2026 backtest';
- $('rmse').previousElementSibling.textContent=isCity?'City error · RMSE':'Station error · RMSE';$('rmse').textContent=fmt(error(rows),2);$('model').textContent=`${demoModel(mode)} · ${rows.length} days · baseline RMSE ${fmt(error(rows,'reference'),2)}`;
- $('interval').textContent=isCity?'Station intervals only':last?.lower!=null?`${fmt(last.lower,0)} – ${fmt(last.upper,0)}`:'Not calibrated';
- $('coverage').textContent=isCity?'Prediction ranges are available in station view.':d.interval_coverage!=null?`90% interval · dataset coverage ${(100*d.interval_coverage).toFixed(1)}%`:'No prediction range for this mode';
- $('source').textContent=`Historical dataset: ${d.rows[0]?.date.slice(0,4)||'historical'} · ${demoModel(mode)} · daily UTC dates`;$('charttitle').textContent=$('city').value+' · '+(isCity?'station average':last?.station_name||$('station').selectedOptions[0]?.textContent||'station');
- $('bandlegend').style.display=!isCity&&rows.some(r=>r.lower!=null)?'':'none';draw(rows);
- for(const id of ['same_day','same_day_env','next_day','next_day_2026'])$(id).classList.toggle('active',id===mode);
- $('historylabel').hidden=!state.forecast_2025?.custom_model_approved;$('previousaqi').required=!$('historylabel').hidden;
- $('tryforecast').querySelector('p').textContent='Use a sample, import a CSV, or enter 28 daily AQI readings to estimate the following day. This input demo is separate from the saved historical chart.';
- overview();stationTable(cityRows);pairedComparison(rows);$('pairednav').hidden=mode!=='next_day_2026';
-};
-function overview(){const date=$('comparedate').value,d=state.modes[mode];const cities=[...new Set(d.rows.map(r=>r.city))].sort();$('cityoverview').innerHTML=cities.map(city=>{const g=d.rows.filter(r=>r.city===city&&r.date.slice(0,10)===date);const total=state.stations?state.stations.filter(r=>r.city===city).length:new Set(d.rows.filter(r=>r.city===city).map(r=>r.station_id)).size;return `<button class="card citycard" data-city="${esc(city)}" style="text-align:left;${city===$('city').value?'border:2px solid #087f76':''}"><small>${esc(city)}</small><div class="number">${fmt(mean(g,'pred'),0)}</div><div class="sub">Observed ${fmt(mean(g,'y'),0)} · ${g.length}/${total} stations<br>${esc(date)}</div></button>`}).join('');document.querySelectorAll('.citycard').forEach(b=>b.onclick=()=>{$('city').value=b.dataset.city;$('comparedate').value='';stations()})}
-function stationTable(rows){
- const date=$('comparedate').value;
- const entries=[...new Map(state.modes[mode].rows.filter(r=>r.city===$('city').value).map(r=>[r.station_id,r.station_name||r.station_id])).entries()];
- const query=$('stationsearch').value.trim().toLowerCase();
- const groups=entries.map(([id,name])=>{
-  const g=rows.filter(r=>r.station_id===id);
-  const r=state.modes[mode].rows.find(row=>row.station_id===id&&row.date.slice(0,10)===date);
-  return {id,name,g,r,rmse:error(g)};
- }).filter(x=>x.name.toLowerCase().includes(query));
- const sort=$('stationsort').value;
- groups.sort(sort==='name'?(a,b)=>a.name.localeCompare(b.name):sort==='error'?(a,b)=>(a.rmse??Infinity)-(b.rmse??Infinity):(a,b)=>(b.r?.pred??-1)-(a.r?.pred??-1));
- $('stationcount').textContent=`${groups.length} of ${entries.length} stations`;
- $('stationcaption').textContent=`Historical prediction and observation on ${date}. RMSE uses the selected date range.`;
- $('stationtable').innerHTML='<thead><tr><th>Station</th><th>Prediction</th><th>Observed</th><th>RMSE</th><th>Baseline RMSE</th><th>Days</th></tr></thead><tbody>'+
-  (groups.length?groups.map(({id,name,g,r,rmse})=>`<tr><td><button data-station="${esc(id)}">${esc(name)}</button></td><td>${fmt(r?.pred)}</td><td>${fmt(r?.y)}</td><td>${fmt(rmse,2)}</td><td>${fmt(error(g,'reference'),2)}</td><td>${g.length}</td></tr>`).join(''):'<tr><td colspan="6" class="empty-row">No station matches this search.</td></tr>')+'</tbody>';
- $('stationtable').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('station').value=b.dataset.station;$('scope').value='station';$('comparedate').value='';render();document.getElementById('chartpanel').scrollIntoView({behavior:'smooth',block:'start'})});
+/* Data */
+let D;
+const S = {view: 'explore', mode: 'next_day', city: 'Delhi', station: '', day: '', from: '', to: '', series: {y: true, pred: true, reference: false, gru_pred: false, range: true, bands: true}, sort: {key: 'pred', dir: -1}, search: '', weatherCity: 'all', protocol: 'chrono'};
+
+function unpack(payload) {
+  const stations = payload.stations;
+  for (const m of Object.values(payload.modes)) {
+    if (m.rows) continue;
+    const c = m.columns, keys = Object.keys(c).filter(k => k !== 'day' && k !== 'station');
+    m.rows = c.day.map((d, i) => {
+      const st = stations[c.station[i]];
+      const row = {date: m.days[d], station_id: st.station_id, station_name: st.station_name, city: st.city};
+      for (const k of keys) row[k] = c[k][i];
+      return row;
+    });
+    delete m.columns;
+  }
+  return payload;
 }
-function exportCSV(){const city=$('scope').value==='city',rows=city?aggregate(filtered()):filtered().filter(r=>r.station_id===$('station').value);const keys=city?['date','y','pred','reference','count']:['date','city','station_id','station_name','y','pred','reference','lower','upper'];const quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';const body=[['mode','model',...keys].map(quote).join(','),...rows.map(r=>[mode,state.modes[mode].model,...keys.map(k=>r[k])].map(quote).join(','))].join('\r\n');const url=URL.createObjectURL(new Blob([body],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='AQI_'+mode+'_'+$('city').value+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 
-
-function bestCityExample(city){
- const rows=state.modes.next_day.rows.filter(r=>r.city===city&&Number.isFinite(r.y));
- const byStation=new Map();
- for(const r of rows){if(!byStation.has(r.station_id))byStation.set(r.station_id,new Set());byStation.get(r.station_id).add(r.date.slice(0,10));}
- const counts=new Map();
- for(const days of byStation.values())for(const date of days){
-  const end=Date.parse(date);let complete=true;
-  for(let i=0;i<28;i++){const prior=new Date(end-i*86400000).toISOString().slice(0,10);if(!days.has(prior)){complete=false;break;}}
-  if(complete)counts.set(date,(counts.get(date)||0)+1);
- }
- return [...counts.entries()].sort((a,b)=>b[1]-a[1]||b[0].localeCompare(a[0]))[0]||null;
+const indexes = {};
+function modeIndex(mode) {
+  if (indexes[mode]) return indexes[mode];
+  const rows = D.modes[mode].rows;
+  const byStation = new Map(), byCity = new Map(), days = new Set();
+  for (const r of rows) {
+    days.add(r.date);
+    if (!byStation.has(r.station_id)) byStation.set(r.station_id, []);
+    byStation.get(r.station_id).push(r);
+    if (!byCity.has(r.city)) byCity.set(r.city, new Map());
+    const cd = byCity.get(r.city);
+    if (!cd.has(r.date)) cd.set(r.date, []);
+    cd.get(r.date).push(r);
+  }
+  for (const list of byStation.values()) list.sort((a, b) => a.date.localeCompare(b.date));
+  const dayList = [...days].sort();
+  return indexes[mode] = {byStation, byCity, days: dayList, first: dayList[0], last: dayList.at(-1), cities: [...byCity.keys()].sort(), cityAvg: new Map()};
 }
-$('cityexample').onclick=()=>{
- if(!state)return;
- const example=bestCityExample($('city').value);
- if(!example){$('cityforecastresult').textContent='No complete 28-day example is available for this city.';return;}
- $('cityobserveddate').value=example[0];$('cityforecastresult').textContent=`Best available sample: ${example[0]} · ${example[1]} stations with complete 28-day history. Choose Forecast city.`;
-};
-
-$('cityforecastform').onsubmit=async event=>{event.preventDefault();$('cityforecaststations').innerHTML='';$('cityforecastresult').textContent='Forecasting eligible stations…';if(window.snapshot){$('cityforecastresult').textContent='City inference requires the local dashboard service.';return}try{const response=await fetch('/api/city-forecast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({city:$('city').value,observed_date:$('cityobserveddate').value})});const d=await response.json();if(!response.ok)throw new Error(d.error);$('cityforecastresult').textContent=`${d.city} · ${d.target_date}: estimated AQI ${fmt(d.prediction,0)} · ${d.available_stations}/${d.expected_stations} eligible stations · Average of the eligible station predictions.`;$('cityforecaststations').innerHTML='<tr><th>Station</th><th>Forecast</th><th>Station interval</th></tr>'+d.stations.sort((a,b)=>b.prediction-a.prediction).map(r=>`<tr><td>${esc(r.station_name)}</td><td>${fmt(r.prediction)}</td><td>${fmt(r.lower,0)}–${fmt(r.upper,0)}</td></tr>`).join('')}catch(e){$('cityforecastresult').textContent=e.message}};
-$('historyfile').onchange=async event=>{try{const file=event.target.files[0];if(!file)return;const lines=(await file.text()).trim().split(/\r?\n/);const header=lines.shift().toLowerCase().split(',').map(v=>v.trim());const di=header.indexOf('date'),ai=header.indexOf('aqi');if(di<0||ai<0)throw new Error('CSV headers must include date and aqi.');let rows=lines.map(line=>{const v=line.split(',');return {date:v[di]?.trim(),aqi:Number(v[ai]),raw:v[ai]?.trim()}}).sort((a,b)=>a.date.localeCompare(b.date));if(rows.length!==28)throw new Error('Import exactly 28 daily readings.');for(let i=0;i<rows.length;i++){const r=rows[i];if(!/^\d{4}-\d{2}-\d{2}$/.test(r.date)||!Number.isFinite(Date.parse(r.date))||new Date(r.date).toISOString().slice(0,10)!==r.date||!r.raw||!Number.isFinite(r.aqi)||r.aqi<0||r.aqi>500||i&&Date.parse(r.date)-Date.parse(rows[i-1].date)!==86400000)throw new Error('Readings must be consecutive valid dates with AQI from 0 to 500.');}$('observeddate').value=rows.at(-1).date;$('observedaqi').value=rows.at(-1).aqi;$('previousaqi').value=rows.slice(0,27).map(r=>r.aqi).join(', ');$('forecastresult').textContent='28 daily observations imported locally. Choose Estimate next day.'}catch(e){$('forecastresult').textContent=e.message}};
-
-function pairedComparison(rows){
- $('pairedcomparison').hidden=mode!=='next_day_2026';if(mode!=='next_day_2026')return;
- const stats=[['Weather XGBoost','pred'],['GRU forecast','gru_pred'],["Yesterday baseline",'reference']].map(([name,key])=>{const paired=rows.filter(r=>Number.isFinite(r[key])&&Number.isFinite(r.y));return {name,n:paired.length,rmse:error(paired,key),mae:paired.length?paired.reduce((s,r)=>s+Math.abs(r[key]-r.y),0)/paired.length:null,bias:paired.length?paired.reduce((s,r)=>s+r[key]-r.y,0)/paired.length:null}});
- $('pairedscores').innerHTML='<tr><th>Model</th><th>Paired days</th><th>RMSE</th><th>MAE</th><th>Bias</th></tr>'+stats.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.n}</td><td>${fmt(r.rmse,2)}</td><td>${fmt(r.mae,2)}</td><td>${fmt(r.bias,2)}</td></tr>`).join('');
+const mean = (rows, key) => { const a = rows.filter(r => finite(r[key])); return a.length ? a.reduce((s, r) => s + r[key], 0) / a.length : null; };
+function cityAverage(idx, city) {
+  if (idx.cityAvg.has(city)) return idx.cityAvg.get(city);
+  const out = [...(idx.byCity.get(city) || new Map())].sort(([a], [b]) => a.localeCompare(b)).map(([date, g]) => ({
+    date, y: mean(g, 'y'), pred: mean(g, 'pred'), reference: mean(g, 'reference'), gru_pred: mean(g, 'gru_pred'), count: g.length,
+  }));
+  idx.cityAvg.set(city, out);
+  return out;
 }
-async function load(){try{state=window.snapshot||await(await fetch('/api/state')).json();if(!initialized){mode=state.default_mode||'same_day';initialized=true}for(const id of ['same_day','same_day_env','next_day'])$(id).disabled=false;$('notice').textContent='Historical demonstration data · Model predictions are estimates, not live AQI readings.';cities()}catch(error){$('notice').textContent='Dashboard data could not be loaded. Start the local dashboard service or open the exported snapshot.'}}
+const idx = () => modeIndex(S.mode);
+const rangeStart = () => S.from || idx().first;
+const rangeEnd = () => S.to || idx().last;
+function selectionAll() { const i = idx(); return S.station ? (i.byStation.get(S.station) || []) : cityAverage(i, S.city); }
+function selectionRows() { const a = rangeStart(), b = rangeEnd(); return selectionAll().filter(r => r.date >= a && r.date <= b); }
+const stationsIn = city => D.stations.filter(s => s.city === city);
+const stationName = id => D.stations.find(s => s.station_id === id)?.station_name || id;
+const shortName = name => String(name).replace(/\s*-\s*[A-Za-z]+$/, '');
+const placeLabel = () => S.station ? shortName(stationName(S.station)) : `${S.city} average`;
 
-$('exampleforecast').onclick=()=>{const all=state.modes.next_day.rows.filter(r=>r.station_id===$('station').value);const lookup=new Map(all.map(r=>[r.date.slice(0,10),r.y]));for(const row of [...all].sort((a,b)=>b.date.localeCompare(a.date))){const target=Date.parse(row.date);const days=Array.from({length:28},(_,i)=>new Date(target-(28-i)*86400000).toISOString().slice(0,10));if(days.every(d=>lookup.has(d))){$('observeddate').value=days.at(-1);$('observedaqi').value=lookup.get(days.at(-1));$('previousaqi').value=days.slice(0,27).map(d=>lookup.get(d)).join(', ');$('forecastresult').textContent='Sample readings loaded. Choose Estimate next day to generate a prediction.';return}}$('forecastresult').textContent='No complete 28-day example is available for this station. Choose another station or enter your observations.'};
-$('forecastform').onsubmit=async event=>{event.preventDefault();if(window.snapshot){$('forecastresult').textContent='Open the local demo dashboard to generate a prediction.';return}$('forecastresult').textContent='Calculating next-day AQI…';try{const response=await fetch('/api/forecast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({station_id:$('station').value,observed_date:$('observeddate').value,latest_aqi:Number($('observedaqi').value),previous_aqi:$('previousaqi').value.trim() ? $('previousaqi').value.split(',').map(v=>v.trim()===''?null:Number(v.trim())) : null})});const result=await response.json();$('forecastresult').textContent=result.error||`${result.target_date}: estimated AQI ${result.prediction.toFixed(0)} · interval ${result.lower.toFixed(0)}–${result.upper.toFixed(0)} · Based on the 28 daily readings supplied.`}catch(error){$('forecastresult').textContent='Forecast service could not be reached.'}};
-$('city').onchange=()=>{$('comparedate').value='';$('stationsearch').value='';$('cityforecastresult').textContent='';$('cityforecaststations').innerHTML='';$('cityobserveddate').value='';stations()};$('station').onchange=()=>{$('comparedate').value='';render()};for(const id of['same_day','same_day_env','next_day','next_day_2026'])$(id).onclick=()=>{if(!state)return;mode=id;$('comparedate').value='';$('fromdate').value='';$('todate').value='';cities()};for(const id of ['scope','fromdate','todate','comparedate','baseline','comparegru'])$(id).onchange=render;$('stationsearch').oninput=()=>stationTable(filtered());$('stationsort').onchange=()=>stationTable(filtered());$('resetdates').onclick=()=>{$('fromdate').value='';$('todate').value='';render()};$('exportrows').onclick=exportCSV;window.addEventListener('resize',()=>{if(state)render()});load();
+function score(rows, key) {
+  const p = rows.filter(r => finite(r[key]) && finite(r.y));
+  if (!p.length) return {n: 0};
+  let se = 0, ae = 0, b = 0, hit = 0;
+  for (const r of p) { const e = r[key] - r.y; se += e * e; ae += Math.abs(e); b += e; if (band(r[key]) === band(r.y)) hit++; }
+  return {n: p.length, rmse: Math.sqrt(se / p.length), mae: ae / p.length, bias: b / p.length, hit: hit / p.length};
+}
+function biasText(b) { if (!finite(b)) return '–'; const r = Math.round(b); return r === 0 ? 'About 0' : `${Math.abs(r)} too ${r > 0 ? 'high' : 'low'}`; }
 
-</script></body></html>
+/* Tooltip */
+function showTip(html, x, y) {
+  const t = $('tip'); t.innerHTML = html; t.hidden = false;
+  const w = t.offsetWidth, h = t.offsetHeight;
+  const left = x + 16 + w > innerWidth - 6 ? x - w - 16 : x + 16;
+  t.style.left = Math.max(6, left) + 'px';
+  t.style.top = Math.max(6, Math.min(innerHeight - h - 6, y - h / 2)) + 'px';
+}
+const hideTip = () => { $('tip').hidden = true; };
 
+/* Hash state, so a refresh or shared link reopens the same view */
+function writeHash() {
+  const p = new URLSearchParams({view: S.view, mode: S.mode, city: S.city, day: S.day});
+  if (S.station) p.set('station', S.station);
+  if (S.from) p.set('from', S.from);
+  if (S.to) p.set('to', S.to);
+  history.replaceState(null, '', '#' + p);
+}
+function readHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  if (['explore', 'forecast', 'accuracy', 'guide'].includes(p.get('view'))) S.view = p.get('view');
+  if (D.modes[p.get('mode')]) S.mode = p.get('mode');
+  if (idx().cities.includes(p.get('city'))) S.city = p.get('city');
+  if (idx().byStation.has(p.get('station')) && stationsIn(S.city).some(s => s.station_id === p.get('station'))) S.station = p.get('station');
+  const inTest = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') && d >= idx().first && d <= idx().last;
+  if (inTest(p.get('from'))) S.from = p.get('from');
+  if (inTest(p.get('to'))) S.to = p.get('to');
+  if (inTest(p.get('day'))) S.day = p.get('day');
+}
+
+/* Selecting things */
+const hasRow = day => selectionAll().some(r => r.date === day);
+function latestDay() { const rows = selectionRows(); return rows.at(-1)?.date || rangeEnd(); }
+function settleDay(keep = true) {
+  if (keep && S.day && S.day >= rangeStart() && S.day <= rangeEnd() && hasRow(S.day)) return;
+  S.day = latestDay();
+}
+function setDay(day) {
+  S.day = day < rangeStart() ? rangeStart() : day > rangeEnd() ? rangeEnd() : day;
+  renderDay();
+}
+function setMode(mode) {
+  stopPlay();
+  S.mode = mode; S.from = ''; S.to = '';
+  if (!idx().cities.includes(S.city)) S.city = idx().cities[0];
+  if (S.station && !idx().byStation.has(S.station)) S.station = '';
+  if (!S.series.gru_pred || mode !== 'next_day_2026') S.series.gru_pred = false;
+  settleDay(false); renderExplore();
+}
+function setCity(city) { stopPlay(); S.city = city; S.station = ''; S.search = ''; $('stationsearch').value = ''; settleDay(); renderExplore(); }
+function setStation(id) { stopPlay(); S.station = id; settleDay(); renderExplore(); }
+function setRange(from, to) {
+  stopPlay();
+  const i = idx();
+  S.from = from && from > i.first ? from : ''; S.to = to && to < i.last ? to : '';
+  if (S.from && S.to && S.from > S.to) [S.from, S.to] = [S.to, S.from];
+  settleDay(); renderExplore();
+}
+
+/* Playback */
+let playTimer = null;
+function setPlayIcon() { $('play').innerHTML = playTimer ? ICON.pause : ICON.play; $('play').setAttribute('aria-label', playTimer ? 'Pause' : 'Play through the days'); }
+function stopPlay() { if (playTimer) { clearInterval(playTimer); playTimer = null; setPlayIcon(); } }
+function togglePlay() {
+  if (playTimer) return stopPlay();
+  if (S.day >= rangeEnd()) S.day = rangeStart();
+  playTimer = setInterval(() => { if (S.day >= rangeEnd()) return stopPlay(); S.day = addDays(S.day, 1); renderDay(); }, 320);
+  setPlayIcon();
+}
+
+/* Explore: controls */
+function renderModes() {
+  const modes = MODE_ORDER.filter(m => D.modes[m]);
+  $('modes').innerHTML = modes.map(m => {
+    const i = modeIndex(m);
+    return `<button class="mode" type="button" role="radio" aria-checked="${m === S.mode}" data-mode="${m}"><b>${esc(MODE_INFO[m].title)}</b><span>${esc(D.modes[m].model.split('-')[0])} · tested on ${esc(testPeriod(i))}</span></button>`;
+  }).join('');
+  const info = MODE_INFO[S.mode];
+  $('modeinfo').innerHTML = `${esc(info.text)} ${info.warn ? `<span class="warn">${esc(info.warn)}</span>` : ''}`;
+}
+function testPeriod(i) {
+  const a = fmtDate(i.first, {month: 'short'}), b = fmtDate(i.last, {month: 'short'}), y = i.first.slice(0, 4);
+  return a === 'Jan' && b === 'Dec' ? y : `${a}–${b} ${y}`;
+}
+function renderCities() {
+  const i = idx();
+  $('cities').innerHTML = i.cities.map(city => {
+    const g = i.byCity.get(city)?.get(S.day) || [];
+    const y = mean(g, 'y'), total = stationsIn(city).length;
+    const label = `${city}: measured ${int(y)}, ${band(y)?.name || 'no data'}, ${g.length} of ${total} stations on this day`;
+    return `<button class="city" type="button" data-city="${esc(city)}" aria-pressed="${city === S.city}" aria-label="${esc(label)}" title="${esc(label)}"><span class="top"><span class="name">${esc(city)}</span>${numChip(y)}</span><span class="sub">${g.length ? `${g.length}/${total} stations` : 'No readings'}</span></button>`;
+  }).join('');
+}
+function renderStationSelect() {
+  const list = [...new Set((idx().byCity.get(S.city) ? [...idx().byCity.get(S.city).values()].flat() : []).map(r => r.station_id))]
+    .map(id => ({id, name: stationName(id)})).sort((a, b) => a.name.localeCompare(b.name));
+  $('station').innerHTML = `<option value="">All stations (city average)</option>` + list.map(s => `<option value="${esc(s.id)}">${esc(shortName(s.name))}</option>`).join('');
+  $('station').value = S.station;
+}
+function renderDayBar() {
+  const a = rangeStart(), b = rangeEnd(), sl = $('slider');
+  sl.max = Math.round((dayMs(b) - dayMs(a)) / DAY);
+  sl.value = Math.round((dayMs(S.day) - dayMs(a)) / DAY);
+  sl.setAttribute('aria-valuetext', fmtDate(S.day));
+  $('day').min = a; $('day').max = b; $('day').value = S.day;
+  $('prevday').disabled = S.day <= a; $('nextday').disabled = S.day >= b;
+  const row = selectionAll().find(r => r.date === S.day);
+  $('daysummary').innerHTML = row
+    ? `<b>${esc(placeLabel())}</b> · Model <b>${int(row.pred)}</b> · Measured <b>${int(row.y)}</b>`
+    : `<b>${esc(placeLabel())}</b> · No reading this day`;
+}
+
+/* Explore: selected-day answer */
+function scaleBar(marks) {
+  // Horizontal 0-500 AQI scale. Model sits above the bar and Measured below it.
+  const W = 300, x = v => 4 + Math.max(0, Math.min(500, v)) / 500 * (W - 8);
+  let s = '';
+  BANDS.forEach((b, i) => {
+    const a = x(i === 0 ? 0 : BANDS[i - 1].hi), e = x(b.hi);
+    s += `<rect x="${a + (i ? 1 : 0)}" y="26" width="${e - a - (i ? 1 : 0)}" height="12" rx="2" fill="${b.fill}"/>`;
+  });
+  const anchor = px => px < 40 ? 'start' : px > W - 40 ? 'end' : 'middle';
+  if (finite(marks.lower) && finite(marks.upper)) {
+    s += `<path d="M${x(marks.lower)} 21v4M${x(marks.lower)} 23H${x(marks.upper)}M${x(marks.upper)} 21v4" stroke="var(--model)" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
+  }
+  if (finite(marks.model)) {
+    const p = x(marks.model);
+    s += `<path d="M${p - 5} 14h10l-5 8z" fill="var(--model)"/><text x="${p}" y="10" text-anchor="${anchor(p)}" style="font-size:11px;fill:var(--ink-2);font-weight:600">${esc(marks.modelLabel || 'Model')} ${int(marks.model)}</text>`;
+  }
+  if (finite(marks.measured)) {
+    const p = x(marks.measured);
+    s += `<path d="M${p - 5} 49h10l-5-8z" fill="var(--measured)"/><text x="${p}" y="61" text-anchor="${anchor(p)}" style="font-size:11px;fill:var(--ink-2);font-weight:600">Measured ${int(marks.measured)}</text>`;
+  }
+  return `<svg viewBox="0 0 ${W} 66" role="img" aria-label="Position on the AQI scale from 0 to 500">${s}</svg>`;
+}
+function verdict(row, noun) {
+  const miss = row.pred - row.y, abs = Math.round(Math.abs(miss)), A = noun[0].toUpperCase() + noun.slice(1);
+  const size = abs === 0 ? `The ${noun} matched the measurement.` : `The ${noun} was ${abs} ${abs === 1 ? 'point' : 'points'} too ${miss > 0 ? 'high' : 'low'}.`;
+  const a = band(row.pred), b = band(row.y);
+  const bands = a === b ? `Both are in the ${a.name} band.` : `${A}: ${a.name}. Measured: ${b.name}.`;
+  return `${size} ${bands}`;
+}
+function renderAnswer() {
+  const info = MODE_INFO[S.mode], row = selectionAll().find(r => r.date === S.day);
+  const head = `<div><h2>${esc(fmtDate(S.day, {day: 'numeric', month: 'long', year: 'numeric'}))}</h2><div class="place">${esc(placeLabel())}${S.station ? `, ${esc(S.city)}` : row ? `, ${row.count} of ${stationsIn(S.city).length} stations` : ''}</div></div>`;
+  if (!row) {
+    const all = selectionAll(), near = all.length ? all.reduce((best, r) => Math.abs(dayMs(r.date) - dayMs(S.day)) < Math.abs(dayMs(best.date) - dayMs(S.day)) ? r : best) : null;
+    $('answer').innerHTML = `${head}<p class="empty">No reading${S.station ? ' from this station' : ' in this city'} on this day, so there is nothing to compare.${near ? `<br><button class="btn" type="button" id="neardays" data-day="${near.date}" style="margin-top:10px">Go to ${esc(fmtDate(near.date))}</button>` : ''}</p>`;
+    return;
+  }
+  const inRange = finite(row.lower) && finite(row.y) ? (row.y >= row.lower && row.y <= row.upper) : null;
+  $('answer').innerHTML = `${head}
+    <div class="figures">
+      <div class="figure"><small>${info.noun === 'forecast' ? 'Model forecast' : 'Model estimate'}</small><div class="val">${int(row.pred)}</div>${bandChip(row.pred)}</div>
+      <div class="figure"><small>Measured</small><div class="val">${int(row.y)}</div>${bandChip(row.y)}</div>
+    </div>
+    <div class="scale">${scaleBar({model: row.pred, measured: row.y, lower: row.lower, upper: row.upper})}</div>
+    <p class="verdict">${esc(verdict(row, info.noun))}</p>
+    <dl class="facts">
+      <dt>Yesterday's reading</dt><dd>${int(row.reference)}</dd>
+      ${finite(row.gru_pred) ? `<dt>GRU forecast</dt><dd>${int(row.gru_pred)}</dd>` : ''}
+      <dt>90% range</dt><dd>${finite(row.lower) ? `${int(row.lower)} to ${int(row.upper)}${inRange === null ? '' : inRange ? ', measured inside' : ', measured outside'}` : S.station ? 'Not available for this model' : 'Pick a station to see it'}</dd>
+    </dl>
+    <ul class="band-key" aria-label="AQI bands">${bandKeyItems()}</ul>`;
+}
+
+/* Explore: main chart */
+let ctx = null;
+function renderChips() {
+  const rows = selectionRows(), row = rows.find(r => r.date === S.day);
+  const hasRange = rows.some(r => finite(r.lower));
+  const items = SERIES.filter(s => rows.some(r => finite(r[s.key])) && (s.key !== 'gru_pred' || S.mode === 'next_day_2026'));
+  $('serieschips').innerHTML = items.map(s => `<button class="chip" type="button" data-series="${s.key}" aria-pressed="${!!S.series[s.key]}"><i style="background:${s.color}"></i>${esc(s.name)} <b>${row ? int(row[s.key]) : '–'}</b></button>`).join('')
+    + (hasRange ? `<button class="chip" type="button" data-series="range" aria-pressed="${S.series.range}"><i class="area" style="background:var(--model)"></i>90% range</button>` : '')
+    + `<button class="chip" type="button" data-series="bands" aria-pressed="${S.series.bands}"><i class="area" style="background:linear-gradient(90deg,#4caf6a,#f2ce3e,#d13f2f)"></i>AQI bands</button>`;
+}
+function renderRanges() {
+  const i = idx(), year = i.first.slice(0, 4);
+  const qs = [['Jan–Mar', `${year}-01-01`, `${year}-03-31`], ['Apr–Jun', `${year}-04-01`, `${year}-06-30`], ['Jul–Sep', `${year}-07-01`, `${year}-09-30`], ['Oct–Dec', `${year}-10-01`, `${year}-12-31`]]
+    .filter(q => q[1] <= i.last && q[2] >= i.first);
+  const active = (a, b) => (a <= i.first ? '' : a) === S.from && (b >= i.last ? '' : b) === S.to;
+  $('ranges').innerHTML = `<button type="button" data-from="" data-to="" aria-pressed="${!S.from && !S.to}">Whole test</button>` + qs.map(q => `<button type="button" data-from="${q[1]}" data-to="${q[2]}" aria-pressed="${active(q[1], q[2])}">${q[0]}</button>`).join('');
+  for (const id of ['from', 'to']) { $(id).min = i.first; $(id).max = i.last; }
+  $('from').value = rangeStart(); $('to').value = rangeEnd();
+}
+function renderChart() {
+  const wrap = $('plotwrap'), W = wrap.clientWidth;
+  if (!W) return;
+  const rows = selectionRows();
+  const H = W < 560 ? 280 : 350, L = 36, R = W < 640 ? 8 : 82, T = 10, B = 26;
+  const lo = dayMs(rangeStart()), hi = dayMs(rangeEnd()), span = Math.max(DAY, hi - lo);
+  const x = t => L + (t - lo) / span * (W - L - R);
+  const keys = SERIES.filter(s => S.series[s.key]).map(s => s.key);
+  const vals = rows.flatMap(r => [...keys.map(k => r[k]), S.series.range ? r.upper : null]).filter(finite);
+  const top = THRESHOLDS.find(t => t >= Math.max(100, ...vals)) || 500;
+  const y = v => H - B - Math.min(v, 500) / top * (H - T - B);
+  let s = '';
+  if (S.series.bands) BANDS.forEach((b, i) => {
+    const a = i ? BANDS[i - 1].hi : 0;
+    if (a >= top) return;
+    const e = Math.min(b.hi, top);
+    s += `<rect x="${L}" width="${W - L - R}" y="${y(e)}" height="${y(a) - y(e)}" fill="${b.fill}" opacity=".13"/>`;
+    if (R > 40 && y(a) - y(e) > 14) s += `<text x="${W - R + 6}" y="${(y(a) + y(e)) / 2 + 4}">${b.name}</text>`;
+  });
+  for (const t of THRESHOLDS.filter(t => t <= top)) s += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke="#dbe6e3"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t}</text>`;
+  // X axis: months, or weekly dates once zoomed in.
+  if (span < 45 * DAY) {
+    const stepDays = span < 12 * DAY ? 2 : 7;
+    for (let t = lo; t <= hi; t += stepDays * DAY) s += `<text x="${x(t)}" y="${H - 8}" text-anchor="middle">${fmtDate(msDay(t), {day: 'numeric', month: 'short'})}</text>`;
+  } else {
+    let m = new Date(lo); m = Date.UTC(m.getUTCFullYear(), m.getUTCMonth(), 1);
+    const monthW = 30 * DAY / span * (W - L - R), skip = monthW < 34 ? 2 : 1;
+    let k = 0;
+    while (m <= hi) {
+      const next = new Date(m); const n = Date.UTC(next.getUTCFullYear(), next.getUTCMonth() + 1, 1);
+      if (m >= lo) s += `<line x1="${x(m)}" x2="${x(m)}" y1="${T}" y2="${H - B}" stroke="#e7efec"/>`;
+      if (k++ % skip === 0) s += `<text x="${x((Math.max(m, lo) + Math.min(n, hi)) / 2)}" y="${H - 8}" text-anchor="middle">${fmtDate(msDay(m), {month: 'short'})}</text>`;
+      m = n;
+    }
+  }
+  // 90% range, drawn as separate areas across missing days.
+  if (S.series.range) {
+    let group = [];
+    const flush = () => {
+      if (group.length > 1) s += `<polygon points="${group.map(r => x(dayMs(r.date)) + ',' + y(r.lower)).join(' ')} ${[...group].reverse().map(r => x(dayMs(r.date)) + ',' + y(r.upper)).join(' ')}" fill="var(--model)" opacity=".14"/>`;
+      group = [];
+    };
+    for (const r of rows) {
+      if (!finite(r.lower)) { flush(); continue; }
+      if (group.length && dayMs(r.date) - dayMs(group.at(-1).date) > DAY) flush();
+      group.push(r);
+    }
+    flush();
+  }
+  for (const key of ['reference', 'gru_pred', 'y', 'pred']) {
+    const def = SERIES.find(d => d.key === key);
+    if (!S.series[key] || !rows.some(r => finite(r[key]))) continue;
+    let path = '', prev = null, dots = '';
+    rows.forEach((r, i) => {
+      if (!finite(r[key])) { prev = null; return; }
+      const t = dayMs(r.date), gap = prev === null || t - prev > DAY;
+      path += (gap ? 'M' : 'L') + x(t).toFixed(1) + ',' + y(r[key]).toFixed(1);
+      const nextT = rows[i + 1] && finite(rows[i + 1][key]) ? dayMs(rows[i + 1].date) : null;
+      if (gap && (nextT === null || nextT - t > DAY)) dots += `<circle cx="${x(t)}" cy="${y(r[key])}" r="2.5" fill="${def.color}"/>`;
+      prev = t;
+    });
+    s += `<path d="${path}" fill="none" stroke="${def.color}" stroke-width="${def.width}" stroke-linejoin="round" stroke-linecap="round"/>${dots}`;
+  }
+  if (!rows.length) s += `<text x="${(L + W - R) / 2}" y="${H / 2}" text-anchor="middle">No readings in this date range</text>`;
+  s += '<g id="marker"></g><g id="hover"></g><rect id="brush" y="' + T + '" height="' + (H - T - B) + '" width="0" x="0" fill="var(--accent)" opacity=".15"/>';
+  const svg = $('plot');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = s;
+  ctx = {W, H, L, R, T, B, lo, hi, span, x, y, byDay: new Map(rows.map(r => [r.date, r]))};
+  drawMarker();
+}
+function dotsAt(row, px) {
+  return SERIES.filter(d => S.series[d.key] && finite(row?.[d.key])).map(d => `<circle cx="${px}" cy="${ctx.y(row[d.key])}" r="4.5" fill="${d.color}" stroke="#fff" stroke-width="2"/>`).join('');
+}
+function drawMarker() {
+  if (!ctx || !$('marker')) return;
+  const px = ctx.x(dayMs(S.day)), row = ctx.byDay.get(S.day);
+  $('marker').innerHTML = `<line x1="${px}" x2="${px}" y1="${ctx.T}" y2="${ctx.H - ctx.B}" stroke="var(--ink)" stroke-width="1"/>${dotsAt(row, px)}`;
+}
+function chartDayAt(clientX) {
+  const b = $('plot').getBoundingClientRect(), px = (clientX - b.left) * ctx.W / b.width;
+  const t = ctx.lo + (px - ctx.L) / (ctx.W - ctx.L - ctx.R) * ctx.span;
+  return msDay(Math.max(ctx.lo, Math.min(ctx.hi, Math.round(t / DAY) * DAY)));
+}
+function hoverChart(day, cx, cy) {
+  const row = ctx.byDay.get(day), px = ctx.x(dayMs(day));
+  $('hover').innerHTML = `<line x1="${px}" x2="${px}" y1="${ctx.T}" y2="${ctx.H - ctx.B}" stroke="#7d9692"/>${dotsAt(row, px)}`;
+  const lines = SERIES.filter(d => S.series[d.key] && finite(row?.[d.key])).map(d => `<div class="r"><span><i style="background:${d.color}"></i>${esc(d.name)}</span><b>${int(row[d.key])}</b></div>`).join('');
+  const range = S.series.range && finite(row?.lower) ? `<div class="r"><span>90% range</span><b>${int(row.lower)} to ${int(row.upper)}</b></div>` : '';
+  showTip(`<strong>${esc(fmtDate(day))}</strong>${row ? lines + range + (row.count ? `<small>${row.count} stations in the average</small>` : '') : '<small>No reading on this day</small>'}`, cx, cy);
+}
+let drag = null;
+function bindChart() {
+  const plot = $('plot');
+  plot.addEventListener('pointerdown', e => { if (ctx && e.button === 0) { drag = {x: e.clientX, day: chartDayAt(e.clientX), moved: false}; plot.setPointerCapture(e.pointerId); } });
+  plot.addEventListener('pointermove', e => {
+    if (!ctx) return;
+    if (drag) {
+      if (Math.abs(e.clientX - drag.x) > 6) drag.moved = true;
+      if (drag.moved) {
+        hideTip(); $('hover').innerHTML = '';
+        const a = ctx.x(dayMs(drag.day)), b = ctx.x(dayMs(chartDayAt(e.clientX)));
+        $('brush').setAttribute('x', Math.min(a, b)); $('brush').setAttribute('width', Math.abs(a - b));
+        return;
+      }
+    }
+    hoverChart(chartDayAt(e.clientX), e.clientX, e.clientY);
+  });
+  plot.addEventListener('pointerup', e => {
+    if (!ctx || !drag) return;
+    const end = chartDayAt(e.clientX), d = drag; drag = null;
+    if (d.moved && d.day !== end) { hideTip(); setRange(d.day < end ? d.day : end, d.day < end ? end : d.day); }
+    else { stopPlay(); setDay(end); }
+  });
+  plot.addEventListener('pointercancel', () => { drag = null; $('brush')?.setAttribute('width', 0); });
+  plot.addEventListener('pointerleave', () => { if (!drag) { hideTip(); if ($('hover')) $('hover').innerHTML = ''; } });
+  plot.addEventListener('keydown', e => {
+    const step = e.shiftKey ? 7 : 1;
+    if (e.key === 'ArrowLeft') setDay(addDays(S.day, -step));
+    else if (e.key === 'ArrowRight') setDay(addDays(S.day, step));
+    else if (e.key === 'Home') setDay(rangeStart());
+    else if (e.key === 'End') setDay(rangeEnd());
+    else if (e.key === 'Escape' && (S.from || S.to)) setRange('', '');
+    else return;
+    e.preventDefault();
+    $('daysummary').setAttribute('aria-live', 'polite');
+  });
+}
+function renderDayTable() {
+  if (!$('tableview').open) return;
+  const rows = [...selectionRows()].reverse(), gru = rows.some(r => finite(r.gru_pred)), rng = rows.some(r => finite(r.lower));
+  $('daytable').innerHTML = `<thead><tr><th>Day</th><th class="n">Model</th><th class="n">Measured</th><th class="n">Yesterday</th>${gru ? '<th class="n">GRU</th>' : ''}${rng ? '<th class="n">90% range</th>' : ''}</tr></thead><tbody>` + rows.map(r => `<tr class="${r.date === S.day ? 'sel' : ''}"><td><button class="link" type="button" data-day="${r.date}">${esc(fmtDate(r.date))}</button></td><td class="n">${int(r.pred)}</td><td class="n">${int(r.y)}</td><td class="n">${int(r.reference)}</td>${gru ? `<td class="n">${int(r.gru_pred)}</td>` : ''}${rng ? `<td class="n">${int(r.lower)} to ${int(r.upper)}</td>` : ''}</tr>`).join('') + '</tbody>';
+}
+
+/* Explore: accuracy for the selection */
+function renderScore() {
+  const rows = selectionRows(), info = MODE_INFO[S.mode];
+  const period = `${fmtDate(rangeStart())} to ${fmtDate(rangeEnd())}`;
+  $('scoretitle').textContent = `How the model did: ${placeLabel()}`;
+  $('scoresub').textContent = `${period}. These numbers follow the chart's date range.`;
+  const m = score(rows, 'pred'), r = score(rows, 'reference'), g = S.mode === 'next_day_2026' ? score(rows, 'gru_pred') : null;
+  if (!m.n) {
+    $('scorelead').textContent = 'No readings in this date range.';
+    $('scoretable').innerHTML = ''; $('scorenote').textContent = ''; $('worst').innerHTML = '';
+    return;
+  }
+  const diff = Math.abs(m.mae - r.mae);
+  $('scorelead').innerHTML = `Over <b>${count(m.n)} days</b>, the ${info.noun} typically missed by <b>${dec(m.mae, 0)} points</b>. Repeating yesterday's reading typically missed by ${dec(r.mae, 0)}, so the model was <b>${diff < .5 ? 'about the same' : `${dec(diff, 0)} ${m.mae < r.mae ? 'better' : 'worse'}`}</b> here.`;
+  const cols = [['Model', m], ...(g ? [['GRU', g]] : []), ["Yesterday's reading", r]];
+  const best = (key, hi = false) => { const vals = cols.map(c => c[1][key]).filter(finite); return hi ? Math.max(...vals) : Math.min(...vals); };
+  const line = (label, key, f, hi) => `<tr><th scope="row" style="font-weight:600">${label}</th>${cols.map(c => `<td class="n ${c[1][key] === best(key, hi) ? 'best' : ''}">${f(c[1][key])}</td>`).join('')}</tr>`;
+  let body = line('Typical miss (MAE)', 'mae', v => dec(v, 1)) + line('RMSE', 'rmse', v => dec(v, 1)) + line('Right AQI band', 'hit', pct, true)
+    + `<tr><th scope="row" style="font-weight:600">Average direction</th>${cols.map(c => `<td class="n">${biasText(c[1].bias)}</td>`).join('')}</tr>`;
+  const cov = rows.filter(q => finite(q.lower) && finite(q.y));
+  if (cov.length) body += `<tr><th scope="row" style="font-weight:600">Measured inside 90% range</th><td class="n">${pct(cov.filter(q => q.y >= q.lower && q.y <= q.upper).length / cov.length)}</td>${cols.slice(1).map(() => '<td class="n muted">–</td>').join('')}</tr>`;
+  $('scoretable').innerHTML = `<thead><tr><th>Measure</th>${cols.map(c => `<th class="n">${esc(c[0])}</th>`).join('')}</tr></thead><tbody>${body}</tbody>`;
+  $('scorenote').textContent = S.station ? 'Bold marks the better value. Scores for one station or a short period can differ a lot from the overall test score.'
+    : 'Bold marks the better value. City numbers compare daily city averages, so they are not station-level scores and differ from the overall test score.';
+  const worst = rows.filter(q => finite(q.pred) && finite(q.y)).reduce((a, q) => Math.abs(q.pred - q.y) > Math.abs(a.pred - a.y) ? q : a);
+  $('worst').innerHTML = `<button class="btn" type="button" id="gotoworst" data-day="${worst.date}">See the biggest miss: ${esc(fmtDate(worst.date))}, ${info.noun} ${int(worst.pred)}, measured ${int(worst.y)}</button>`;
+}
+let scatterCtx = null;
+function renderScatter() {
+  const rows = selectionRows().filter(r => finite(r.pred) && finite(r.y));
+  const W = 340, H = 300, L = 36, R = 8, T = 8, B = 34;
+  const top = THRESHOLDS.find(t => t >= Math.max(100, ...rows.flatMap(r => [r.pred, r.y]))) || 500;
+  const x = v => L + Math.min(v, 500) / top * (W - L - R), y = v => H - B - Math.min(v, 500) / top * (H - T - B);
+  let s = '';
+  for (const t of THRESHOLDS.filter(t => t <= top)) {
+    s += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke="#e3ece9"/><line x1="${x(t)}" x2="${x(t)}" y1="${T}" y2="${H - B}" stroke="#e3ece9"/>`;
+    s += `<text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t}</text><text x="${x(t)}" y="${H - B + 14}" text-anchor="middle">${t}</text>`;
+  }
+  s += `<line x1="${x(0)}" y1="${y(0)}" x2="${x(top)}" y2="${y(top)}" stroke="#7d9692" stroke-width="1.2"/>`;
+  s += `<text x="${(L + W - R) / 2}" y="${H - 4}" text-anchor="middle">Model</text><text transform="translate(10 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">Measured</text>`;
+  for (const r of rows) if (r.date !== S.day) s += `<circle cx="${x(r.pred).toFixed(1)}" cy="${y(r.y).toFixed(1)}" r="3" fill="var(--model)" opacity=".45"/>`;
+  const sel = rows.find(r => r.date === S.day);
+  if (sel) s += `<circle cx="${x(sel.pred)}" cy="${y(sel.y)}" r="6" fill="var(--ink)" stroke="#fff" stroke-width="2"/>`;
+  s += '<circle id="scatterhover" r="6" fill="none" stroke="var(--ink)" stroke-width="1.5" visibility="hidden"/>';
+  $('scatter').setAttribute('viewBox', `0 0 ${W} ${H}`);
+  $('scatter').innerHTML = s;
+  scatterCtx = {rows, x, y, W};
+}
+function nearestScatter(e) {
+  if (!scatterCtx?.rows.length) return null;
+  const b = $('scatter').getBoundingClientRect(), k = scatterCtx.W / b.width;
+  const px = (e.clientX - b.left) * k, py = (e.clientY - b.top) * k;
+  let best = null, dist = 24 * 24;
+  for (const r of scatterCtx.rows) {
+    const d = (scatterCtx.x(r.pred) - px) ** 2 + (scatterCtx.y(r.y) - py) ** 2;
+    if (d < dist) { dist = d; best = r; }
+  }
+  return best;
+}
+
+/* Explore: stations in the city */
+const summaries = new Map();
+function stationSummaries() {
+  const key = [S.mode, S.city, rangeStart(), rangeEnd()].join('|');
+  if (summaries.has(key)) return summaries.get(key);
+  const i = idx(), a = rangeStart(), b = rangeEnd();
+  const ids = [...new Set([...(i.byCity.get(S.city)?.values() || [])].flat().map(r => r.station_id))];
+  const out = ids.map(id => {
+    const g = i.byStation.get(id).filter(r => r.date >= a && r.date <= b);
+    return {id, name: shortName(stationName(id)), days: g.length, mae: score(g, 'pred').mae, base: score(g, 'reference').mae};
+  });
+  summaries.set(key, out);
+  return out;
+}
+function renderStations() {
+  const today = new Map((idx().byCity.get(S.city)?.get(S.day) || []).map(r => [r.station_id, r]));
+  $('stationstitle').textContent = `Stations in ${S.city}`;
+  $('stationssub').textContent = `Values on ${fmtDate(S.day)}. Typical misses cover the chart's date range. Click a station to open it.`;
+  $('download').innerHTML = `${ICON.down}Download this selection (CSV)`;
+  const q = S.search.trim().toLowerCase();
+  const all = stationSummaries().map(s => { const r = today.get(s.id); return {...s, pred: r?.pred, y: r?.y, miss: r ? Math.abs(r.pred - r.y) : null}; });
+  const list = all.filter(s => s.name.toLowerCase().includes(q));
+  const {key, dir} = S.sort;
+  list.sort((a, b) => {
+    if (key === 'name') return dir * a.name.localeCompare(b.name);
+    const av = a[key] ?? null, bv = b[key] ?? null;
+    if (av === null && bv === null) return a.name.localeCompare(b.name);
+    if (av === null) return 1;
+    if (bv === null) return -1;
+    return dir * (av - bv);
+  });
+  $('stationcount').textContent = `${list.length} of ${all.length} stations${all.length < stationsIn(S.city).length ? ` tested (${stationsIn(S.city).length} configured)` : ''}`;
+  const th = (k, label, n = true) => `<th class="${n ? 'n' : ''}" aria-sort="${key === k ? (dir > 0 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-sort="${k}">${label}${key === k ? (dir > 0 ? ICON.up : ICON.dn) : ''}</button></th>`;
+  $('stationtable').innerHTML = `<thead><tr>${th('name', 'Station', false)}${th('pred', 'Model')}${th('y', 'Measured')}<th>Band</th>${th('miss', 'Miss')}${th('mae', 'Typical miss')}${th('base', "Yesterday's miss")}${th('days', 'Days')}</tr></thead><tbody>`
+    + (list.length ? list.map(s => `<tr class="${s.id === S.station ? 'sel' : ''}" data-row="${esc(s.id)}"><td><button class="link" type="button" data-station="${esc(s.id)}">${esc(s.name)}</button></td><td class="n">${int(s.pred)}</td><td class="n">${int(s.y)}</td><td>${finite(s.y) ? bandChip(s.y) : '<span class="muted small">No reading</span>'}</td><td class="n">${int(s.miss)}</td><td class="n">${dec(s.mae)}</td><td class="n">${dec(s.base)}</td><td class="n">${s.days}</td></tr>`).join('') : '<tr><td colspan="8" class="empty">No station matches that search.</td></tr>') + '</tbody>';
+}
+let mapCtx = null;
+function renderMap() {
+  const pts = stationSummaries().map(s => ({...s, ...D.stations.find(t => t.station_id === s.id)})).filter(p => finite(p.lat) && finite(p.lon));
+  const today = new Map((idx().byCity.get(S.city)?.get(S.day) || []).map(r => [r.station_id, r]));
+  const W = 340, pad = 14;
+  if (!pts.length) { $('map').innerHTML = ''; mapCtx = null; return; }
+  const lat0 = pts.reduce((a, p) => a + p.lat, 0) / pts.length * Math.PI / 180, k = Math.cos(lat0);
+  const xs = pts.map(p => p.lon * k), ys = pts.map(p => p.lat);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const scale = Math.min((W - 2 * pad) / Math.max(maxX - minX, 1e-6), 260 / Math.max(maxY - minY, 1e-6));
+  const H = Math.max(160, (maxY - minY) * scale + 2 * pad);
+  const offX = (W - (maxX - minX) * scale) / 2;
+  const place = p => ({px: offX + (p.lon * k - minX) * scale, py: H - pad - (p.lat - minY) * scale});
+  let s = `<rect width="${W}" height="${H}" rx="8" fill="#f4f8f7"/>`;
+  const placed = pts.map(p => ({...p, ...place(p), r: today.get(p.id)}));
+  for (const p of placed.filter(p => p.id !== S.station)) {
+    const b = band(p.r?.y);
+    s += `<circle cx="${p.px}" cy="${p.py}" r="6" fill="${b ? b.fill : '#f4f8f7'}" stroke="${b ? '#fff' : '#8aa39e'}" stroke-width="${b ? 1.5 : 1.2}"/>`;
+  }
+  const chosen = placed.find(p => p.id === S.station);
+  if (chosen) { const b = band(chosen.r?.y); s += `<circle cx="${chosen.px}" cy="${chosen.py}" r="8" fill="${b ? b.fill : '#f4f8f7'}" stroke="var(--ink)" stroke-width="2.5"/>`; }
+  $('map').setAttribute('viewBox', `0 0 ${W} ${H}`);
+  $('map').innerHTML = s;
+  mapCtx = {placed, W};
+}
+function nearestMap(e) {
+  if (!mapCtx) return null;
+  const b = $('map').getBoundingClientRect(), k = mapCtx.W / b.width;
+  const px = (e.clientX - b.left) * k, py = (e.clientY - b.top) * k;
+  let best = null, dist = 24 * 24;
+  for (const p of mapCtx.placed) { const d = (p.px - px) ** 2 + (p.py - py) ** 2; if (d < dist) { dist = d; best = p; } }
+  return best;
+}
+function downloadSelection() {
+  const rows = selectionRows(), cols = ['date', 'y', 'pred', 'reference'];
+  if (rows.some(r => finite(r.gru_pred))) cols.push('gru_pred');
+  if (rows.some(r => finite(r.lower))) cols.push('lower', 'upper');
+  if (!S.station) cols.push('count');
+  const quote = v => '"' + String(v ?? '').replaceAll('"', '""') + '"';
+  const body = [['mode', 'model', 'place', ...cols].map(quote).join(','), ...rows.map(r => [S.mode, D.modes[S.mode].model, placeLabel(), ...cols.map(k => r[k])].map(quote).join(','))].join('\r\n');
+  const url = URL.createObjectURL(new Blob([body], {type: 'text/csv;charset=utf-8'}));
+  const a = document.createElement('a');
+  a.href = url; a.download = `AQI_${S.mode}_${placeLabel().replace(/[^A-Za-z0-9]+/g, '_')}.csv`; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* Explore: render groups */
+function renderDay() {
+  renderCities(); renderDayBar(); renderAnswer(); renderChips(); drawMarker(); renderDayTable(); renderScatter(); renderStations(); renderMap(); writeHash();
+}
+function renderExplore() {
+  $('charttitle').textContent = `Daily AQI: ${placeLabel()}`;
+  const m = D.modes[S.mode];
+  $('chartnote').textContent = `${S.station ? '' : 'City view shows the plain mean of reporting stations, not an official city AQI. 90% ranges exist for single stations only. '}Model ${m.model}. ${m.source}.`;
+  renderModes(); renderStationSelect(); renderRanges(); renderChart(); renderScore(); renderDay();
+}
+
+/* Try a forecast */
+const isSnapshot = () => !!window.snapshot;
+function fillSelect(el, values, labels) { el.innerHTML = values.map((v, i) => `<option value="${esc(v)}">${esc(labels ? labels[i] : v)}</option>`).join(''); }
+function savedActual(stationId, day) {
+  for (const m of ['next_day']) {
+    const r = D.modes[m] && modeIndex(m).byStation.get(stationId)?.find(q => q.date === day);
+    if (r) return r.y;
+  }
+  return null;
+}
+function bestCityDate(city) {
+  const i = modeIndex('next_day'), counts = new Map();
+  for (const s of stationsIn(city)) {
+    const list = i.byStation.get(s.station_id); if (!list) continue;
+    const days = new Set(list.map(r => r.date));
+    for (const d of days) {
+      let ok = true;
+      for (let k = 1; k < 28 && ok; k++) ok = days.has(addDays(d, -k));
+      if (ok) counts.set(d, (counts.get(d) || 0) + 1);
+    }
+  }
+  return [...counts].sort((a, b) => b[1] - a[1] || b[0].localeCompare(a[0]))[0] || null;
+}
+function targetLine() {
+  const d = $('cityfdate').value;
+  $('cityfstatus').className = 'status wide';
+  $('cityfstatus').textContent = d ? `This forecasts ${fmtDate(addDays(d, 1))}.` : '';
+}
+async function submitCity(e) {
+  e.preventDefault();
+  if (isSnapshot()) return;
+  const btn = $('cityfgo'), status = $('cityfstatus');
+  btn.disabled = true; btn.textContent = 'Forecasting…';
+  status.className = 'status wide'; status.textContent = 'Running the model. The first run can take several seconds.';
+  $('cityresult').style.opacity = .5;
+  try {
+    const res = await fetch('/api/city-forecast', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({city: $('cityf').value, observed_date: $('cityfdate').value})});
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error);
+    targetLine();
+    const rows = d.stations.map(r => ({...r, actual: savedActual(r.station_id, d.target_date)})).sort((a, b) => b.prediction - a.prediction);
+    const measured = rows.filter(r => finite(r.actual));
+    const avgActual = measured.length ? measured.reduce((a, r) => a + r.actual, 0) / measured.length : null;
+    $('cityresult').innerHTML = `<div class="result">
+      <div class="head"><span class="val">${int(d.prediction)}</span>${bandChip(d.prediction)}<span class="muted">${esc(d.city)} average for ${esc(fmtDate(d.target_date))}</span></div>
+      <p class="small">Average of <b>${d.available_stations} of ${d.expected_stations}</b> stations; the rest lacked 28 straight valid days.${finite(avgActual) ? ` Those stations later measured <b>${int(avgActual)}</b> on average${measured.length < rows.length ? ` (${measured.length} with a saved reading)` : ''}.` : ''} This is not an official city AQI.</p>
+      <div class="tscroll"><table><thead><tr><th>Station</th><th class="n">Forecast</th><th>Band</th><th class="n">90% range</th><th class="n">Measured</th><th class="n">Miss</th></tr></thead><tbody>${rows.map(r => `<tr><td>${esc(shortName(r.station_name))}</td><td class="n">${int(r.prediction)}</td><td>${bandChip(r.prediction)}</td><td class="n">${int(r.lower)} to ${int(r.upper)}</td><td class="n">${int(r.actual)}</td><td class="n">${finite(r.actual) ? int(Math.abs(r.prediction - r.actual)) : '–'}</td></tr>`).join('')}</tbody></table></div>
+    </div>`;
+  } catch (err) {
+    status.className = 'status wide bad'; status.textContent = err.message === 'Failed to fetch' ? 'The dashboard service could not be reached. Check that it is still running.' : `${err.message}. Try a later date, or use "Find the date with most stations".`;
+    $('cityresult').innerHTML = '';
+  } finally {
+    btn.disabled = isSnapshot(); btn.textContent = 'Forecast the next day'; $('cityresult').style.opacity = '';
+  }
+}
+
+let sampleState = {station: null, offset: 0, values: '', target: null};
+function parseReadings() {
+  const raw = $('stf-values').value.trim();
+  const parts = raw ? raw.split(/[\s,;]+/).filter(Boolean) : [];
+  const nums = parts.map(Number);
+  const bad = parts.findIndex((p, i) => !finite(nums[i]));
+  if (bad >= 0) return {nums, error: `Reading ${bad + 1} ("${parts[bad]}") is not a number.`};
+  const range = nums.findIndex(v => v < 0 || v > 500);
+  if (range >= 0) return {nums, error: `Reading ${range + 1} (${nums[range]}) is outside 0 to 500.`};
+  if (nums.length > 28) return {nums, error: `That is ${nums.length} readings. The model takes exactly 28.`};
+  return {nums, need: 28 - nums.length};
+}
+function refreshReadings() {
+  const {nums, error, need} = parseReadings(), status = $('stf-status'), d = $('stf-date').value, ready = !error && need === 0 && !!d;
+  $('stf-go').disabled = !ready || isSnapshot();
+  if (error) { status.className = 'status wide bad'; status.textContent = error; }
+  else if (need > 0) { status.className = 'status wide'; status.textContent = `${nums.length} of 28 readings entered. ${need} more needed.`; }
+  else if (!d) { status.className = 'status wide'; status.textContent = 'All 28 readings entered. Now choose the date of the last reading.'; }
+  else { status.className = 'status wide ok'; status.textContent = `Ready. This forecasts ${fmtDate(addDays(d, 1))}.`; }
+  drawPreview(nums, d);
+}
+function drawPreview(nums, d) {
+  const W = plotWidth($('stf-preview'), 520), H = 130, L = 30, R = 8, T = 8, B = 20, vals = nums.filter(finite);
+  const top = THRESHOLDS.find(t => t >= Math.max(100, ...vals)) || 500;
+  const x = i => L + i / 27 * (W - L - R), y = v => H - B - Math.max(0, Math.min(v, 500)) / top * (H - T - B);
+  let s = '';
+  BANDS.forEach((b, i) => { const a = i ? BANDS[i - 1].hi : 0; if (a < top) { const e = Math.min(b.hi, top); s += `<rect x="${L}" width="${W - L - R}" y="${y(e)}" height="${y(a) - y(e)}" fill="${b.fill}" opacity=".13"/>`; } });
+  for (const t of THRESHOLDS.filter(t => t <= top)) s += `<text x="${L - 5}" y="${y(t) + 4}" text-anchor="end">${t}</text>`;
+  if (d) for (const k of [0, 9, 18, 27]) s += `<text x="${x(k)}" y="${H - 5}" text-anchor="${k === 0 ? 'start' : k === 27 ? 'end' : 'middle'}">${fmtDate(addDays(d, k - 27), {day: 'numeric', month: 'short'})}</text>`;
+  if (vals.length) {
+    s += `<path d="${nums.slice(0, 28).map((v, i) => (i ? 'L' : 'M') + x(i) + ',' + y(v)).join('')}" fill="none" stroke="var(--measured)" stroke-width="2" stroke-linejoin="round"/>`;
+    const li = Math.min(nums.length, 28) - 1;
+    s += `<circle cx="${x(li)}" cy="${y(nums[li])}" r="4" fill="var(--measured)" stroke="#fff" stroke-width="2"/>`;
+  } else {
+    s += `<text x="${(L + W - R) / 2}" y="${H / 2}" text-anchor="middle">Your readings will appear here</text>`;
+  }
+  $('stf-preview').setAttribute('viewBox', `0 0 ${W} ${H}`);
+  $('stf-preview').innerHTML = s;
+}
+function loadSample() {
+  const id = $('stf-station').value, list = modeIndex('next_day').byStation.get(id) || [];
+  const lookup = new Map(list.map(r => [r.date, r.y]));
+  const options = [...list].reverse().filter(row => { for (let k = 1; k <= 28; k++) if (!lookup.has(addDays(row.date, -k))) return false; return true; });
+  $('stf-status').className = 'status wide';
+  if (!options.length) { $('stf-status').className = 'status wide bad'; $('stf-status').textContent = 'This station has no 28-day stretch in the saved 2025 data. Choose another station or type your own.'; return; }
+  // Repeated clicks step back about a month, so each click shows a different stretch.
+  if (sampleState.station !== id) { sampleState.station = id; sampleState.offset = 0; }
+  const row = options[sampleState.offset % options.length];
+  sampleState.offset += 30;
+  const days = Array.from({length: 28}, (_, k) => addDays(row.date, k - 28));
+  $('stf-values').value = days.map(k => lookup.get(k)).join(', ');
+  $('stf-date').value = days.at(-1);
+  sampleState.values = $('stf-values').value; sampleState.target = row.date;
+  $('stf-file').value = '';
+  $('stationresult').innerHTML = '';
+  refreshReadings();
+}
+async function importCsv(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const status = $('stf-status');
+  try {
+    const lines = (await file.text()).trim().split(/\r?\n/);
+    const header = lines.shift().toLowerCase().split(',').map(v => v.trim());
+    const di = header.indexOf('date'), ai = header.indexOf('aqi');
+    if (di < 0 || ai < 0) throw new Error('The CSV needs columns named date and aqi.');
+    const rows = lines.map(line => { const v = line.split(','); return {date: v[di]?.trim(), raw: v[ai]?.trim(), aqi: Number(v[ai])}; }).sort((a, b) => a.date.localeCompare(b.date));
+    if (rows.length !== 28) throw new Error(`The CSV has ${rows.length} row${rows.length === 1 ? '' : 's'}. It needs exactly 28 daily readings.`);
+    rows.forEach((r, i) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(r.date) || !finite(dayMs(r.date)) || msDay(dayMs(r.date)) !== r.date) throw new Error(`Row ${i + 1}: "${r.date}" is not a date in YYYY-MM-DD form.`);
+      if (!r.raw || !finite(r.aqi) || r.aqi < 0 || r.aqi > 500) throw new Error(`Row ${i + 1}: AQI must be a number from 0 to 500.`);
+      if (i && dayMs(r.date) - dayMs(rows[i - 1].date) !== DAY) throw new Error(`The dates must be consecutive. There is a gap before ${r.date}.`);
+    });
+    $('stf-values').value = rows.map(r => r.aqi).join(', ');
+    $('stf-date').value = rows.at(-1).date;
+    refreshReadings();
+  } catch (err) { status.className = 'status wide bad'; status.textContent = err.message; }
+}
+async function submitStation(e) {
+  e.preventDefault();
+  if (isSnapshot()) return;
+  const {nums, error, need} = parseReadings();
+  if (error || need) return refreshReadings();
+  const btn = $('stf-go'), status = $('stf-status');
+  btn.disabled = true; btn.textContent = 'Forecasting…'; status.className = 'status wide'; status.textContent = 'Running the model. The first run can take several seconds.';
+  try {
+    const res = await fetch('/api/forecast', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({station_id: $('stf-station').value, observed_date: $('stf-date').value, latest_aqi: nums[27], previous_aqi: nums.slice(0, 27)})});
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error);
+    const isSample = sampleState.values === $('stf-values').value && sampleState.target === d.target_date;
+    const actual = isSample ? savedActual($('stf-station').value, d.target_date) : null;
+    refreshReadings();
+    $('stationresult').innerHTML = `<div class="result">
+      <div class="head"><span class="val">${int(d.prediction)}</span>${bandChip(d.prediction)}<span class="muted">forecast for ${esc(fmtDate(d.target_date))}</span></div>
+      <div class="scale">${scaleBar({model: d.prediction, modelLabel: 'Forecast', measured: actual, lower: d.lower, upper: d.upper})}</div>
+      <dl class="facts"><dt>90% range</dt><dd>${int(d.lower)} to ${int(d.upper)}</dd>${finite(actual) ? `<dt>Measured that day (saved data)</dt><dd>${int(actual)}</dd><dt>Miss</dt><dd>${int(Math.abs(d.prediction - actual))}</dd>` : ''}<dt>Model</dt><dd>${esc(d.model)}</dd><dt>Range hit rate in the 2025 test</dt><dd>${pct(d.empirical_backtest_coverage)}</dd></dl>
+      <p class="small muted">Based only on the readings entered above. It is not a verified live reading.</p>
+    </div>`;
+  } catch (err) {
+    status.className = 'status wide bad'; status.textContent = err.message === 'Failed to fetch' ? 'The dashboard service could not be reached. Check that it is still running.' : err.message;
+  } finally { btn.textContent = 'Forecast the next day'; btn.disabled = isSnapshot() || !!parseReadings().error || parseReadings().need > 0; }
+}
+function setupForecast() {
+  const cities = [...new Set(D.stations.map(s => s.city))].sort();
+  fillSelect($('cityf'), cities); fillSelect($('stf-city'), cities);
+  const fillStations = () => { const list = stationsIn($('stf-city').value).sort((a, b) => a.station_name.localeCompare(b.station_name)); fillSelect($('stf-station'), list.map(s => s.station_id), list.map(s => shortName(s.station_name))); };
+  $('cityf').value = S.city; $('stf-city').value = S.city; fillStations();
+  if (S.station) $('stf-station').value = S.station;
+  const useBest = () => {
+    const best = bestCityDate($('cityf').value);
+    if (best) { $('cityfdate').value = addDays(best[0], -1); targetLine(); $('cityfstatus').textContent += ` ${best[1]} stations should have 28 straight days.`; }
+    else { $('cityfstatus').className = 'status wide bad'; $('cityfstatus').textContent = 'No date in 2025 has 28 straight readings for this city.'; }
+  };
+  $('cityf').onchange = () => { $('cityresult').innerHTML = ''; useBest(); };
+  $('cityfbest').onclick = useBest;
+  $('cityfdate').oninput = targetLine;
+  $('cityform').onsubmit = submitCity;
+  $('stf-city').onchange = () => { fillStations(); $('stationresult').innerHTML = ''; };
+  $('stf-station').onchange = () => { $('stationresult').innerHTML = ''; };
+  $('stf-values').oninput = () => { $('stf-file').value = ''; refreshReadings(); };
+  $('stf-date').oninput = refreshReadings;
+  $('stf-file').onchange = importCsv;
+  $('stf-sample').onclick = loadSample;
+  $('stationform').onsubmit = submitStation;
+  const f = D.forecast_2025, dev = D.modes.next_day;
+  $('tryintro').textContent = `Both forms use the frozen ${f?.model || dev.model} model, whose weights were fixed before its 2025 test. City dates are limited to 2025 because earlier dates include the model's own training data. Results here are predictions from past or typed-in readings, not live forecasts.`;
+  useBest(); refreshReadings();
+  if (isSnapshot()) {
+    $('snapshotnote').hidden = false;
+    if (window.publicFiles) $('snapshotnote').innerHTML = 'This saved copy of the dashboard has no model attached, so these forms can\'t run. <a href="AQI_Local_Demo.zip" download>Download the local demo</a> to generate forecasts.';
+    $('cityfgo').disabled = true; $('stf-go').disabled = true;
+  } else if (!f?.custom_model_approved) {
+    $('snapshotnote').hidden = false;
+    $('snapshotnote').textContent = 'The verified 28-day model is not available in this copy, so these forms cannot run.';
+    $('cityfgo').disabled = true; $('stf-go').disabled = true;
+  }
+}
+
+const plotWidth = (el, fallback) => el.parentElement.clientWidth || fallback;
+
+/* How accurate? */
+function renderAccuracy() {
+  const P = D.year_holdout?.modes?.find(m => m.mode === 'same_day');
+  const gains = {next_day: D.forecast_2025?.gain, next_day_2026: D.development_2026?.gain_vs_persistence, same_day: P?.gain};
+  const rowsHtml = MODE_ORDER.filter(m => D.modes[m]).map(m => {
+    const mode = D.modes[m], i = modeIndex(m), base = score(mode.rows, 'reference').rmse, g = gains[m];
+    const scale = v => 6 + (Math.max(25, Math.min(v, 70)) - 25) / 45 * 228, a = scale(mode.rmse), b = scale(base);
+    const better = mode.rmse < base;
+    return `<tr>
+      <td><b>${esc(MODE_INFO[m].short)}</b><br><span class="muted">${esc(mode.model)}</span></td>
+      <td style="white-space:nowrap">${esc(testPeriod(i))}<br><span class="muted">${i.byStation.size} stations, ${count(mode.rows.length)} station-days</span></td>
+      <td style="min-width:250px"><svg viewBox="0 0 240 26" width="240" height="26" role="img" aria-label="Model RMSE ${dec(mode.rmse, 2)}, yesterday's reading ${dec(base, 2)}"><line x1="6" x2="234" y1="13" y2="13" stroke="#e3ece9"/><line x1="${a}" x2="${b}" y1="13" y2="13" stroke="#8aa39e" stroke-width="2"/><circle cx="${b}" cy="13" r="5" fill="var(--yesterday)" stroke="#fff" stroke-width="2"/><circle cx="${a}" cy="13" r="5" fill="var(--model)" stroke="#fff" stroke-width="2"/></svg></td>
+      <td class="n">${dec(mode.rmse, 2)}</td><td class="n">${dec(base, 2)}</td>
+      <td class="n ${better ? 'best' : ''}">${g ? `${dec(g.gain, 2)}<br><span class="muted" style="font-weight:400">${dec(g.lower, 2)} to ${dec(g.upper, 2)}</span>` : `${dec(base - mode.rmse, 2)}<br><span class="muted" style="font-weight:400">no interval saved</span>`}</td>
+      <td class="n">${mode.interval_coverage != null ? pct(mode.interval_coverage) : '<span class="muted">No range</span>'}</td>
+    </tr>`;
+  }).join('');
+  $('testtable').innerHTML = `<thead><tr><th>Model</th><th>Tested on</th><th>RMSE, 25 to 70</th><th class="n">Model</th><th class="n">Yesterday</th><th class="n">RMSE gain, 95% interval</th><th class="n">Inside 90% range</th></tr></thead><tbody>${rowsHtml}</tbody>`;
+
+  const dev = D.development_2026;
+  $('weathersection').hidden = !dev?.spike_metrics?.length;
+  if (dev?.spike_metrics?.length) {
+    const cities = [...new Set(dev.spike_metrics.map(r => r.city))];
+    $('weathercity').innerHTML = cities.map(c => `<button type="button" data-wcity="${esc(c)}" aria-pressed="${c === S.weatherCity}">${c === 'all' ? 'All cities' : esc(c)}</button>`).join('');
+    $('weathersub').textContent = `Both models scored on the same ${count(dev.spike_metrics.find(r => r.city === 'all').n)} station-days in January to September 2026, from ${dev.coverage_stations} of ${D.stations.length} stations. Remaining stations had no usable test data.`;
+    const row = S.weatherCity, xg = dev.spike_metrics.find(r => r.city === row && r.model.startsWith('XGBoost')), gru = dev.spike_metrics.find(r => r.city === row && r.model.includes('GRU'));
+    const bars = [['Weather model', xg.RMSE, 'var(--model)'], ['GRU', gru.RMSE, 'var(--gru)'], ["Yesterday's reading", xg.baseline_RMSE, 'var(--yesterday)']];
+    const W = plotWidth($('weatherbars'), 620), L = 136, R = 54, rowH = 36, top = Math.max(...bars.map(b => b[1]));
+    $('weatherbars').setAttribute('viewBox', `0 0 ${W} ${bars.length * rowH + 22}`);
+    $('weatherbars').innerHTML = bars.map((b, i) => { const w = b[1] / top * (W - L - R), yy = i * rowH + 6; return `<text x="${L - 8}" y="${yy + 16}" text-anchor="end" style="fill:var(--ink-2);font-size:12.5px">${b[0]}</text><path d="M${L} ${yy}h${w - 4}a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4h-${w - 4}z" fill="${b[2]}"/><text x="${L + w + 6}" y="${yy + 16}" style="fill:var(--ink);font-size:12.5px;font-weight:600">${b[1].toFixed(1)}</text>`; }).join('') + `<text x="${L}" y="${bars.length * rowH + 16}">RMSE in AQI points, lower is better</text>`;
+    const cell = (r, k) => r[k] == null ? '<span class="muted">No alarms</span>' : pct(r[k]);
+    $('weathertable').innerHTML = `<thead><tr><th>Model</th><th class="n">Caught</th><th class="n">Alarms correct</th></tr></thead><tbody><tr><td>Weather model</td><td class="n">${cell(xg, 'recall')}</td><td class="n">${cell(xg, 'precision')}</td></tr><tr><td>GRU</td><td class="n">${cell(gru, 'recall')}</td><td class="n">${cell(gru, 'precision')}</td></tr></tbody>`;
+    const all = dev.spike_metrics.filter(r => r.city === 'all'), ax = all.find(r => r.model.startsWith('XGBoost')), ag = all.find(r => r.model.includes('GRU')), gv = dev.gain_vs_gru;
+    $('weatherverdict').textContent = `Across all cities the weather model cut RMSE by ${dec(gv.gain, 2)} points against GRU (95% interval ${dec(gv.lower, 2)} to ${dec(gv.upper, 2)}), and it caught more sharp changes (${pct(ax.recall)} against ${pct(ag.recall)}). ${dev.recommended ? 'It met the rule set before testing, so it is the default model.' : `But its alarms were right less often (${pct(ax.precision)} against ${pct(ag.precision)}). The rule set before testing allowed no loss on either measure, so GRU stays the default.`}`;
+  }
+
+  const gainRows = D.attention_stability || [];
+  $('attentionsection').hidden = !gainRows.length;
+  if (gainRows.length) {
+    const names = {chrono: ['Later dates', 'Trained on earlier data, tested on November and December 2023.'], loco: ['Unseen city', 'Each of the eight cities held out in turn.'], season_cv: ['Interleaved months', 'Four folds across the months of the year.']};
+    $('protocols').innerHTML = Object.entries(names).map(([k, v]) => `<button type="button" data-protocol="${k}" aria-pressed="${k === S.protocol}">${v[0]}</button>`).join('');
+    $('protocolnote').textContent = names[S.protocol][1];
+    const order = [['TA', 'Temporal (TA)'], ['FA', 'Feature (FA)'], ['TA+FA', 'Temporal + feature'], ['S-TA', 'Patch model: temporal (S-TA)'], ['S-SA', 'Patch model: spatial (S-SA)'], ['S-TA+SA', 'Patch model: both']];
+    const data = gainRows.filter(r => r.protocol === S.protocol);
+    const W = plotWidth($('attentionplot'), 760), L = W < 560 ? 124 : 214, R = 18, rowH = 34, T = 22, H = T + order.length * rowH + 22;
+    const ext = Math.max(5, ...data.flatMap(r => [Math.abs(r.lower), Math.abs(r.upper)]));
+    const x = v => L + (v + ext) / (2 * ext) * (W - L - R);
+    let s = `<text x="${x(0) - 6}" y="12" text-anchor="end">Attention worse</text><text x="${x(0) + 6}" y="12">Attention better</text>`;
+    const step = ext > 12 ? 5 : ext > 6 ? 2 : 1;
+    for (let v = -Math.floor(ext / step) * step; v <= ext; v += step) s += `<line x1="${x(v)}" x2="${x(v)}" y1="${T}" y2="${H - 22}" stroke="${v === 0 ? '#5d7473' : '#e7efec'}" stroke-width="${v === 0 ? 1.2 : 1}"/><text x="${x(v)}" y="${H - 6}" text-anchor="middle">${v > 0 ? '+' : ''}${v}</text>`;
+    order.forEach(([model, label], i) => {
+      const yy = T + i * rowH + rowH / 2;
+      s += `<text x="${L - 10}" y="${yy + 4}" text-anchor="end" style="fill:var(--ink-2);font-size:12px">${W < 560 ? label.replace(/^Patch model: /, 'Patch ') : label}</text>`;
+      [['SWT-w7', -6, 'var(--measured)'], ['SW-w7', 6, 'var(--yesterday)']].forEach(([fs, off, color]) => {
+        const r = data.find(q => q.model === model && q.feature_set === fs); if (!r) return;
+        s += `<g class="att" data-tip="${esc(`${label} on ${fs}: ${r.gain > 0 ? '+' : ''}${r.gain.toFixed(2)} (${r.lower.toFixed(2)} to ${r.upper.toFixed(2)})`)}"><rect x="${x(r.lower)}" y="${yy + off - 8}" width="${Math.max(16, x(r.upper) - x(r.lower))}" height="16" fill="transparent"/><line x1="${x(r.lower)}" x2="${x(r.upper)}" y1="${yy + off}" y2="${yy + off}" stroke="${color}" stroke-width="2"/><circle cx="${x(r.gain)}" cy="${yy + off}" r="4.5" fill="${color}" stroke="#fff" stroke-width="1.5"/></g>`;
+      });
+    });
+    $('attentionplot').setAttribute('viewBox', `0 0 ${W} ${H}`);
+    $('attentionplot').innerHTML = s;
+  }
+
+  const audits = (D.audits || []).filter(a => a.validation === 'purged date validation');
+  $('faithsection').hidden = !audits.length;
+  if (audits.length) {
+    const val = (a, base, method) => a.scores.find(s => s.baseline === base && s.method === method)?.spearman;
+    const label = {FA: 'Feature attention (FA)', 'S-SA': 'Spatial attention (S-SA)'};
+    const bases = [['mean', 'Replaced with the mean'], ['seasonal_donor', 'Replaced with a same-city, same-season value']];
+    $('faithtable').innerHTML = `<thead><tr><th>Model</th><th>How inputs were replaced</th><th class="n">Attention agreement</th><th class="n">SHAP agreement</th></tr></thead><tbody>` + audits.flatMap(a => bases.map(([b, name]) => { const at = val(a, b, 'attention'), sh = val(a, b, 'SHAP'); return `<tr><td>${esc(label[a.model] || a.model)}</td><td>${name}</td><td class="n">${dec(at, 3)}</td><td class="n best">${dec(sh, 3)}</td></tr>`; })).join('') + '</tbody>';
+    $('faithlead').textContent = 'SHAP agreed better than attention in all four tests, so a high attention weight is a weaker guide to what drives the prediction. These audits cover the SWT-w7 checkpoints only. The values are rank correlations, not accuracy.';
+  }
+
+  const pr = D.prospective, ens = D.research?.prospective_ensemble;
+  $('prospectivesection').hidden = !pr;
+  if (pr) {
+    const when = d => d ? fmtDate(d.slice(0, 10)) : 'unknown';
+    $('prosub').textContent = `Status saved ${when(pr.updated_utc)}.`;
+    const blend = ens ? `A frozen blend (${Math.round(ens.weather_weight * 100)}% weather model, ${Math.round(ens.gru_weight * 100)}% GRU)` : 'The frozen forecast';
+    $('protext').textContent = `${blend} is waiting for this period to finish. There is no score yet, and none of the results above come from it. The final evaluation can run from ${fmtDate(pr.final_evaluation_date)}. It will be an out-of-time test using later exports and archived weather, not a record of forecasts issued live, because monthly CPCB exports don't provide the previous day's AQI in time.`;
+    $('profacts').innerHTML = `<dt>Test period</dt><dd>${esc(fmtDate(pr.period[0]))} to ${esc(fmtDate(pr.period[1]))}</dd><dt>Stations with October exports</dt><dd>${pr.stations_with_exports} of ${pr.expected_stations}</dd><dt>Usable station-days so far</dt><dd>${count(pr.usable_station_days_in_period)}</dd><dt>Latest measured day</dt><dd>${esc(when(pr.latest_observed_aqi))}</dd><dt>Forecasts recorded before their target day</dt><dd>${pr.recorded_days}</dd>`;
+  }
+}
+
+/* Guide */
+function renderGuide() {
+  $('mapkey').innerHTML = bandKeyItems();
+  $('bandtable').innerHTML = `<thead><tr><th>Band</th><th class="n">AQI</th><th>Possible health impact</th></tr></thead><tbody>` + BANDS.map(b => `<tr><td><span class="band-chip" style="background:${b.fill};color:${b.ink}">${b.name}</span></td><td class="n">${b.lo}–${b.hi}</td><td>${esc(b.meaning)}</td></tr>`).join('') + '</tbody>';
+  $('downloads').hidden = isSnapshot();
+  $('publicfiles').hidden = !window.publicFiles;
+}
+
+/* Navigation */
+function showView(view) {
+  stopPlay(); hideTip();
+  S.view = view;
+  for (const v of ['explore', 'forecast', 'accuracy', 'guide']) $('view-' + v).hidden = v !== view;
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.view === view));
+  if (view === 'explore') renderExplore(); else writeHash();
+  if (view === 'accuracy') renderAccuracy();
+  if (view === 'forecast') refreshReadings();
+  scrollTo({top: 0});
+}
+
+/* Events */
+function bindExplore() {
+  $('modes').onclick = e => { const b = e.target.closest('[data-mode]'); if (b) setMode(b.dataset.mode); };
+  $('modes').onkeydown = e => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    const list = MODE_ORDER.filter(m => D.modes[m]), i = list.indexOf(S.mode), d = ['ArrowRight', 'ArrowDown'].includes(e.key) ? 1 : -1;
+    setMode(list[(i + d + list.length) % list.length]);
+    $('modes').querySelector('[aria-checked=true]').focus();
+    e.preventDefault();
+  };
+  $('cities').onclick = e => { const b = e.target.closest('[data-city]'); if (b) setCity(b.dataset.city); };
+  $('station').onchange = e => setStation(e.target.value);
+  $('prevday').innerHTML = ICON.prev; $('nextday').innerHTML = ICON.next; setPlayIcon();
+  $('prevday').onclick = () => { stopPlay(); setDay(addDays(S.day, -1)); };
+  $('nextday').onclick = () => { stopPlay(); setDay(addDays(S.day, 1)); };
+  $('play').onclick = togglePlay;
+  $('day').onchange = e => { if (e.target.value) { stopPlay(); setDay(e.target.value); } else renderDayBar(); };
+  $('slider').oninput = e => { stopPlay(); setDay(addDays(rangeStart(), +e.target.value)); };
+  $('ranges').onclick = e => { const b = e.target.closest('[data-from]'); if (b) setRange(b.dataset.from, b.dataset.to); };
+  $('from').onchange = () => { if ($('from').value) setRange($('from').value, S.to); else renderRanges(); };
+  $('to').onchange = () => { if ($('to').value) setRange(S.from, $('to').value); else renderRanges(); };
+  $('serieschips').onclick = e => {
+    const b = e.target.closest('[data-series]'); if (!b) return;
+    S.series[b.dataset.series] = !S.series[b.dataset.series];
+    renderChips(); renderChart();
+  };
+  $('answer').onclick = e => { const b = e.target.closest('#neardays'); if (b) setDay(b.dataset.day); };
+  $('tableview').ontoggle = renderDayTable;
+  $('daytable').onclick = e => { const b = e.target.closest('[data-day]'); if (b) setDay(b.dataset.day); };
+  $('worst').onclick = e => { const b = e.target.closest('[data-day]'); if (b) { setDay(b.dataset.day); $('answer').scrollIntoView({block: 'center'}); } };
+  $('scatter').addEventListener('pointermove', e => {
+    const r = nearestScatter(e), h = $('scatterhover'); if (!h) return;
+    if (!r) { h.setAttribute('visibility', 'hidden'); hideTip(); return; }
+    h.setAttribute('cx', scatterCtx.x(r.pred)); h.setAttribute('cy', scatterCtx.y(r.y)); h.setAttribute('visibility', 'visible');
+    showTip(`<strong>${esc(fmtDate(r.date))}</strong><div class="r"><span>Model</span><b>${int(r.pred)}</b></div><div class="r"><span>Measured</span><b>${int(r.y)}</b></div>`, e.clientX, e.clientY);
+  });
+  $('scatter').addEventListener('pointerleave', hideTip);
+  $('scatter').addEventListener('click', e => { const r = nearestScatter(e); if (r) { stopPlay(); hideTip(); setDay(r.date); } });
+  $('map').style.cursor = 'pointer';
+  $('map').addEventListener('pointermove', e => {
+    const p = nearestMap(e); if (!p) return hideTip();
+    showTip(`<strong>${esc(p.name)}</strong>${p.r ? `<div class="r"><span>Model</span><b>${int(p.r.pred)}</b></div><div class="r"><span>Measured</span><b>${int(p.r.y)}</b></div><small>${band(p.r.y).name}</small>` : '<small>No reading on this day</small>'}`, e.clientX, e.clientY);
+  });
+  $('map').addEventListener('pointerleave', hideTip);
+  $('map').addEventListener('click', e => { const p = nearestMap(e); if (p) { hideTip(); setStation(p.id); } });
+  $('stationsearch').oninput = e => { S.search = e.target.value; renderStations(); };
+  $('stationtable').onclick = e => {
+    const sort = e.target.closest('[data-sort]');
+    if (sort) { const k = sort.dataset.sort; S.sort = {key: k, dir: S.sort.key === k ? -S.sort.dir : (k === 'name' || k === 'mae' || k === 'base' || k === 'miss' ? 1 : -1)}; renderStations(); return; }
+    const st = e.target.closest('[data-station]');
+    if (st) { setStation(st.dataset.station); $('answer').scrollIntoView({block: 'center'}); }
+  };
+  $('stationtable').onpointerover = e => {
+    const tr = e.target.closest('[data-row]'); if (!tr || !mapCtx) return;
+    const p = mapCtx.placed.find(q => q.id === tr.dataset.row); const old = $('maphi'); if (old) old.remove();
+    if (p) $('map').insertAdjacentHTML('beforeend', `<circle id="maphi" cx="${p.px}" cy="${p.py}" r="9" fill="none" stroke="var(--ink)" stroke-width="1.5"/>`);
+  };
+  $('stationtable').onpointerleave = () => $('maphi')?.remove();
+  $('download').onclick = downloadSelection;
+  bindChart();
+  let queued = false;
+  const redraw = () => { if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; if (S.view === 'explore') renderChart(); else if (S.view === 'accuracy') renderAccuracy(); else if (S.view === 'forecast') refreshReadings(); }); };
+  new ResizeObserver(redraw).observe(document.querySelector('.wrap'));
+  let closed = false;
+  try { closed = localStorage.getItem('aqi-tips-closed') === '1'; } catch (e) {}
+  $('tips').hidden = closed;
+  $('tipsclose').onclick = () => { $('tips').hidden = true; try { localStorage.setItem('aqi-tips-closed', '1'); } catch (e) {} };
+}
+function bindAccuracy() {
+  $('weathercity').onclick = e => { const b = e.target.closest('[data-wcity]'); if (b) { S.weatherCity = b.dataset.wcity; renderAccuracy(); } };
+  $('protocols').onclick = e => { const b = e.target.closest('[data-protocol]'); if (b) { S.protocol = b.dataset.protocol; renderAccuracy(); } };
+  $('attentionplot').addEventListener('pointermove', e => { const g = e.target.closest('.att'); if (g) showTip(`<strong>${esc(g.dataset.tip)}</strong>`, e.clientX, e.clientY); else hideTip(); });
+  $('attentionplot').addEventListener('pointerleave', hideTip);
+}
+
+async function load() {
+  try {
+    const payload = window.snapshot || await (await fetch('/api/dashboard')).json();
+    D = unpack(payload);
+    if (!Object.keys(D.modes).length) throw new Error('No saved results');
+    S.mode = D.modes[D.default_mode] ? D.default_mode : MODE_ORDER.find(m => D.modes[m]);
+    if (!idx().cities.includes(S.city)) S.city = idx().cities[0];
+    readHash();
+    settleDay(!!S.day);
+    bindExplore(); bindAccuracy();
+    renderGuide(); renderAccuracy(); setupForecast();
+    document.querySelectorAll('.tabs button').forEach(b => { b.onclick = () => showView(b.dataset.view); });
+    // A pasted link or edited address reopens that selection without a reload.
+    addEventListener('hashchange', () => { stopPlay(); S.station = ''; S.from = ''; S.to = ''; S.day = ''; readHash(); settleDay(!!S.day); showView(S.view); });
+    $('loading').hidden = true;
+    showView(S.view);
+    if (S.view !== 'explore') renderExplore();
+  } catch (err) {
+    console.error(err);
+    $('loading').className = 'panel empty error-text';
+    $('loading').textContent = 'The saved results could not be loaded. Start the dashboard with "python src/dashboard/app.py" and reload, or open an exported copy.';
+  }
+}
+load();
+</script>
+</body>
+</html>
