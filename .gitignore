@@ -26,3 +26,12 @@ share/
 
 # Course handout (not our work; keep local only)
 docs/Instructions for writing a literature survey.pdf
+
+# LaTeX build files (the PDF is kept at docs/AQI_Project_Report_Springer.pdf)
+docs/springer_report/main.aux
+docs/springer_report/main.bbl
+docs/springer_report/main.blg
+docs/springer_report/main.log
+docs/springer_report/main.out
+docs/springer_report/main.pdf
+docs/springer_report/*.toc
