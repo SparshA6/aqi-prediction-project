@@ -11,6 +11,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'src/dashboard'))
 sys.path.insert(0,str(ROOT/'src/models'))
 import app
+import build_share
 from forecast_diagnostics import summarize
 
 class DashboardExtensions(unittest.TestCase):
@@ -84,6 +85,18 @@ class DashboardExtensions(unittest.TestCase):
             self.assertIn('window.snapshot={};window.publicFiles=true;',page)
             for name in ['AQI_Local_Demo.zip','AQI_Methodology_Submission.pdf','AQI_Results_and_Discussion_Submission.pdf']:
                 self.assertIn(f'href="{name}"',page)
+
+    def test_share_build_files_exist_and_hide_local_paths(self):
+        for name in build_share.PROJECT_FILES: self.assertTrue((ROOT/name).exists(),name)
+        for source in [*build_share.PACKAGE_FILES.values(),'PUBLIC_README.md']: self.assertTrue((build_share.PACKAGE/source).exists(),source)
+        self.assertNotIn(b'\r',(build_share.PACKAGE/'run_unix.sh').read_bytes())
+        manifests=build_share.audit_manifests()
+        self.assertTrue(manifests)
+        for text in manifests.values():
+            self.assertEqual(build_share.local_paths(text.encode()),[])
+            self.assertIn('kind',json.loads(text))
+        for data in [json.dumps(dict(models_dir=str(ROOT))).encode(),ROOT.as_posix().encode()]:
+            with self.assertRaises(ValueError): build_share.checked('manifest.json',data)
 
     def test_forecast_values_give_readable_errors(self):
         body={'station_id':'alipur_delhi','observed_date':'2025-10-31','latest_aqi':100}

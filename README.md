@@ -323,7 +323,7 @@ python src/dashboard/app.py
 
 Open http://127.0.0.1:8765. Explore results lets you pick a model, city, station and day, then compare the model with the measurement on a zoomable chart, an accuracy table, a scatter plot, a station map and a sortable table. Click a chart day, press play, or drag to zoom. Try a forecast runs the frozen GRU for a city or from 28 readings you supply. How accurate? holds the test scores, the 2026 weather comparison, the attention results and the prospective status. Guide explains the terms. The address bar keeps the current selection, so a link or refresh reopens the same view.
 
-It uses historical observations, not current AQI or real-time forecasts. The local service is bound to loopback.
+It uses historical observations, not current AQI or real-time forecasts. The local service is bound to loopback. `python src/dashboard/build_share.py` rebuilds the local demo ZIP and public static page in `share/` and publishes nothing.
 
 
 
@@ -474,4 +474,4 @@ The completed 2026 comparison retried all 13 missing stations; each again return
 
 Weather-assisted RMSE was 30.270 versus 31.707 for the frozen GRU and 34.668 for persistence on the same days. The weather model improved RMSE in every city. Its paired weekly RMSE gain versus GRU was 1.437 (95% interval 0.376–2.614). Nominal 90% intervals covered 94.9%. Sharp-change recall increased from 6.7% to 18.2%, but precision fell from 57.5% to 52.8%. Because the predeclared promotion rule required no loss of either recall or precision, the GRU remains the dashboard default. The separate **Next-day · 2026 weather** tab exposes the verified candidate, city comparison, sharp-change scores and downloads. Further tuning now requires a new untouched test period.
 
-`verify_forecast_2026.py` independently verifies actual targets, exact previous-calendar-day baselines, all 27 overall/city metric groups, intervals, model hashes and exclusions. The dashboard download/chart checks match the frozen outputs. The full test suite contains 53 passing checks.
+`verify_forecast_2026.py` independently verifies actual targets, exact previous-calendar-day baselines, all 27 overall/city metric groups, intervals, model hashes and exclusions. The dashboard download/chart checks match the frozen outputs. The full test suite contains 54 passing checks.
