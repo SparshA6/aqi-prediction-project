@@ -23,3 +23,6 @@ share/
 # Trained model weights that occasionally land outside results/
 *.pt
 *.npz
+
+# Course handout (not our work; keep local only)
+docs/Instructions for writing a literature survey.pdf
