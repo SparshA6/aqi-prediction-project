@@ -12,7 +12,7 @@ Full context, research questions and status: [`docs/PROJECT_BRIEF.md`](docs/PROJ
 
 Paired 2026 error analysis and corrected city-wise attention summaries are in
 `results/followthrough/oct12-v1/Results_Report.txt`. The dashboard includes
-same-date GRU/weather/persistence comparisons and downloadable error and attention tables.
+same-date GRU/weather/persistence comparisons and a download of that report.
 
 A 30% GRU / 70% archived-weather XGBoost blend is frozen in
 `results/ensemble/runs/prospective-oct13-v1`. Its weight was chosen using October
@@ -355,7 +355,7 @@ Status is saved in `results/studies/<name>/status.json`; failure stops the suite
 
 Resume rejects changed data/model code or seed counts. Repeated partial attempts get distinct result directories.
 
-The dashboard selects the new same-day spatial model using validation results once that experiment is complete.
+The dashboard's same-day results now come from the verified 2023-to-2024 year holdout (Ridge-history), not this spatial study.
 
 
 
@@ -406,7 +406,7 @@ Existing report titles may refer to 2023; update the scientific write-up to matc
 
 `src/extract_station_covariates.py` extracts SRTM elevation and WorldCover land-use fractions for station buffers. `src/models/run_static_ablation.py` compares ENV-T with ENV-T+P under all eight city holdouts. The completed `physical-features-loco-v1` run found no consistent improvement; retain the paired city uncertainty and individual fold scores in reports. Covariate provenance is stored with the data.
 
-In the dashboard's next-day mode, enter an observed UTC day and AQI for the selected station, then choose **Estimate next day**. This uses the forecast chosen using validation data. The current selection is Persistence. Historical interval coverage is shown separately from nominal coverage. The standalone HTML snapshot displays historical results; custom forecasts require the local dashboard service.
+In the dashboard's Try a forecast tab, choose a station, enter the date of the last reading and 28 daily AQI values, then choose **Forecast the next day**. This uses the frozen GRU-28days from the verified 2025 test. Historical interval coverage is shown separately from nominal coverage. The standalone HTML snapshot displays historical results; custom forecasts require the local dashboard service.
 
 ## GPU training (NVIDIA CUDA)
 
@@ -443,7 +443,7 @@ Weather uses only lag 7/14 ERA5-Land observations, allowing the usual five-day r
 .\.venv-gpu\Scripts\python.exe src/models/evaluate_forecast_2025.py --development-run 2025-ready-v1 --run-name locked-2025-v1 --device cuda
 ```
 
-The current `finish_forecast_2025.py` local pipeline waits for downloads and frozen training, validates 2025 data while preserving checked 2023–2024 history, runs the locked test, and exports results to the chat outputs folder. It does not refit or select using 2025. Missing station-month exports require a downloader retry; CAPTCHA remains human-only. Existing results cannot be overwritten. The dashboard remains on its validated benchmark until a fresh test is complete and reviewed.
+The current `finish_forecast_2025.py` local pipeline waits for downloads and frozen training, validates 2025 data while preserving checked 2023–2024 history, runs the locked test, and exports results to the chat outputs folder. It does not refit or select using 2025. Missing station-month exports require a downloader retry; CAPTCHA remains human-only. Existing results cannot be overwritten.
 
 The completed `locked-2025-v1` test evaluated 30,263 eligible days at 107 stations in eight cities. The three-seed GRU-28days selected in October 2024 achieved RMSE 32.516 versus persistence 35.388 (8.1% lower). Paired weekly RMSE gain was 2.872, with a 95% bootstrap interval [2.168, 3.605]. RMSE improved in all eight cities; Bengaluru MAE was slightly worse. Nominal 90% intervals covered 95.4% of this test. Overall scores weight station-days, with Delhi contributing 12,387 rows. Missing days and year-to-year changes limit interpretation.
 
@@ -453,7 +453,7 @@ The completed `locked-2025-v1` test evaluated 30,263 eligible days at 107 statio
 
 The dashboard now compares all eight cities on a common chosen UTC date, shows available/expected station counts, ranks stations, filters chart dates, overlays yesterday's baseline, exports filtered CSV, and summarizes sharp-change misses. City predictions are equal-weight station averages, not official city AQI. City chart RMSE is calculated from paired daily city averages; station errors remain separate. Station interval bounds are not averaged into a purported calibrated city interval. Environment-only same-day estimation is shown separately from history-assisted estimation; its model was selected using October 2023, not 2024 test labels.
 
-The next-day tab offers station inference from 28 supplied observations, local CSV import (`date,aqi`, exactly 28 consecutive UTC dates), and batch city inference from saved historical observations. Batch inference excludes all target-day and later readings before building inputs. Missing/stuck days exclude a station from batch inference. These inputs and outputs are historical or user supplied; no live CPCB integration is configured.
+The Try a forecast tab offers station inference from 28 supplied observations, local CSV import (`date,aqi`, exactly 28 consecutive UTC dates), and batch city inference from saved 2025 observations. Earlier dates are not offered because they are the frozen model's training data. Batch inference excludes all target-day and later readings before building inputs. Missing/stuck days exclude a station from batch inference. These inputs and outputs are historical or user supplied; no live CPCB integration is configured.
 
 `forecast_diagnostics.py` audits the frozen 2025 results without changing them. At a 50-AQI change threshold, the existing GRU detected 164 of 3,975 sharp changes in the correct direction (4.1% recall). Its overall RMSE improvement does not establish reliable spike detection.
 
@@ -461,7 +461,7 @@ The next-day tab offers station inference from 28 supplied observations, local C
 
 `run_forecast_2026_development.py` now uses January 2024–September 2025 for fitting, October 2025 for selection, and November–December 2025 for interval calibration. The earlier 2025 benchmark remains frozen separately, and 2025 is explicitly development data for these new candidates. Four AQI-change XGBoost candidates train on CUDA and are compared with persistence and the frozen GRU on the same dates. The weather-assisted depth-5 model selected in October had RMSE 31.803, versus 36.228 for the frozen GRU and 37.262 for persistence. These are development scores, not fresh-test results. `verify_forecast_2026_development.py` recomputes all scores/calibration and reproduces sampled predictions on CPU.
 
-The running `finish_forecast_2026.py` worker waits for all 963 January–September station-month files, rejects missing/duplicate months and conflicting hourly values, stages actual AQI with source hashes, and evaluates the frozen candidate once on 2026. The dashboard exposes the separate 2026 chart only after verification passes. It also displays download and test status. The worker stops after 24 hours if downloads are incomplete; rerun it to resume after resolving missing exports. CAPTCHA prompts require the human user.
+The `finish_forecast_2026.py` worker waits for all 963 January–September station-month files, rejects missing/duplicate months and conflicting hourly values, stages actual AQI with source hashes, and evaluates the frozen candidate once on 2026. The dashboard exposes the separate 2026 chart only after verification passes. The worker stops after 24 hours if downloads are incomplete; rerun it to resume after resolving missing exports. CAPTCHA prompts require the human user.
 
 ```powershell
 .\.venv-gpu\Scripts\python.exe src/cpcb_downloader.py --auto --year 2026 --months 1 2 3 4 5 6 7 8 9 --output-root data/raw/cpcb_2026
@@ -474,4 +474,4 @@ The completed 2026 comparison retried all 13 missing stations; each again return
 
 Weather-assisted RMSE was 30.270 versus 31.707 for the frozen GRU and 34.668 for persistence on the same days. The weather model improved RMSE in every city. Its paired weekly RMSE gain versus GRU was 1.437 (95% interval 0.376–2.614). Nominal 90% intervals covered 94.9%. Sharp-change recall increased from 6.7% to 18.2%, but precision fell from 57.5% to 52.8%. Because the predeclared promotion rule required no loss of either recall or precision, the GRU remains the dashboard default. The separate **Next-day · 2026 weather** tab exposes the verified candidate, city comparison, sharp-change scores and downloads. Further tuning now requires a new untouched test period.
 
-`verify_forecast_2026.py` independently verifies actual targets, exact previous-calendar-day baselines, all 27 overall/city metric groups, intervals, model hashes and exclusions. The dashboard download/chart checks match the frozen outputs. The full test suite contains 23 passing checks.
+`verify_forecast_2026.py` independently verifies actual targets, exact previous-calendar-day baselines, all 27 overall/city metric groups, intervals, model hashes and exclusions. The dashboard download/chart checks match the frozen outputs. The full test suite contains 53 passing checks.
