@@ -319,7 +319,7 @@ footer{color:var(--muted);font-size:.8125rem;padding:2px 2px 0}
         <div class="plot-col">
           <svg class="plot" id="map" role="img" aria-label="Station positions coloured by measured AQI on the selected day. The table beside it lists the same stations."></svg>
           <ul class="band-key" id="mapkey" aria-label="AQI bands" style="margin-top:8px;border:0;padding-top:0"></ul>
-          <p class="small muted" style="margin-top:6px">Positions come from station coordinates, with no base map. Colour shows the measured band; hollow dots have no reading that day.</p>
+          <p class="small muted" style="margin-top:6px">Dots sit at each station's coordinates on an OpenStreetMap base map, greyed so the colours stay clear. The map needs an internet connection; without one the dots still show. Colour shows the measured band; hollow dots have no reading that day.</p>
         </div>
         <div>
           <div class="tools"><input type="search" id="stationsearch" placeholder="Find a station" aria-label="Find a station"><span class="small muted" id="stationcount"></span></div>
@@ -500,10 +500,10 @@ function numChip(v) { const b = band(v); return b ? `<span class="num-chip" styl
 
 // Plain labels for each saved test. Scores and model names still come from the saved runs.
 const MODE_INFO = {
-  next_day: {title: "Tomorrow, from past AQI", noun: 'forecast', short: 'Next-day forecast', text: "Predicts the next day's AQI from a station's previous 28 days of readings."},
-  next_day_2026: {title: 'Tomorrow, with weather forecasts', noun: 'forecast', short: 'Next-day forecast with weather', text: 'Predicts the next day from earlier readings plus archived 24-hour-ahead weather forecasts.'},
-  same_day: {title: 'Same day, with past AQI', noun: 'estimate', short: 'Same-day estimate', text: "Estimates a day's AQI after it ends, from that day's satellite and weather data plus the previous reading.", warn: 'It uses data from the day itself, so it is not a forecast.'},
-  same_day_env: {title: 'Same day, satellite and weather only', noun: 'estimate', short: 'Same-day estimate, no AQI history', text: "Estimates a day's AQI after it ends, using only that day's satellite and weather data.", warn: 'It uses data from the day itself, so it is not a forecast.'},
+  next_day: {title: "Tomorrow, from past AQI", noun: 'forecast', short: 'Next-day forecast', text: "Predicts the next day's AQI from a station's previous 28 days of AQI readings, the day of the year and the station's location. It uses no satellite or weather data."},
+  next_day_2026: {title: 'Tomorrow, with weather forecasts', noun: 'forecast', short: 'Next-day forecast with weather', text: "Predicts the next day's AQI as yesterday's value plus a predicted change. It uses the previous 28 days of AQI readings, the day of the year, the station's location and archived city-level weather forecasts issued 24 hours earlier."},
+  same_day: {title: 'Same day, with past AQI', noun: 'estimate', short: 'Same-day estimate', text: "Estimates a day's AQI after it ends, from that day's satellite and weather data, the previous days' weather, the day of the year, the station's location and its earlier AQI readings (yesterday, two days ago, a 3-day average and a week ago).", warn: 'It uses data from the day itself, so it is not a forecast.'},
+  same_day_env: {title: 'Same day, satellite and weather only', noun: 'estimate', short: 'Same-day estimate, no AQI history', text: "Estimates a day's AQI after it ends, from that day's satellite and weather data, the previous days' weather, the day of the year and the station's location. It uses no earlier AQI readings.", warn: 'It uses data from the day itself, so it is not a forecast.'},
 };
 const MODE_ORDER = ['next_day', 'next_day_2026', 'same_day', 'same_day_env'];
 const SERIES = [
@@ -1009,16 +1009,31 @@ let mapCtx = null;
 function renderMap() {
   const pts = stationSummaries().map(s => ({...s, ...D.stations.find(t => t.station_id === s.id)})).filter(p => finite(p.lat) && finite(p.lon));
   const today = new Map((idx().byCity.get(S.city)?.get(S.day) || []).map(r => [r.station_id, r]));
-  const W = 340, pad = 14;
+  const W = 340, pad = 20;
   if (!pts.length) { $('map').innerHTML = ''; mapCtx = null; return; }
-  const lat0 = pts.reduce((a, p) => a + p.lat, 0) / pts.length * Math.PI / 180, k = Math.cos(lat0);
-  const xs = pts.map(p => p.lon * k), ys = pts.map(p => p.lat);
-  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-  const scale = Math.min((W - 2 * pad) / Math.max(maxX - minX, 1e-6), 260 / Math.max(maxY - minY, 1e-6));
-  const H = Math.max(160, (maxY - minY) * scale + 2 * pad);
-  const offX = (W - (maxX - minX) * scale) / 2;
-  const place = p => ({px: offX + (p.lon * k - minX) * scale, py: H - pad - (p.lat - minY) * scale});
-  let s = `<rect width="${W}" height="${H}" rx="8" fill="#f4f8f7"/>`;
+  // Web Mercator in tile units, so the dots line up with the map tiles drawn behind them.
+  const tx = (lon, z) => (lon + 180) / 360 * 2 ** z;
+  const ty = (lat, z) => { const r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 2 ** z; };
+  const lons = pts.map(p => p.lon), lats = pts.map(p => p.lat);
+  const west = Math.min(...lons), east = Math.max(...lons), south = Math.min(...lats), north = Math.max(...lats);
+  let z = 5;   // the largest zoom at which the stations span at most 3 tiles each way, which keeps the tile count small
+  for (let t = 14; t >= 5; t--) { if (tx(east, t) - tx(west, t) <= 3 && ty(south, t) - ty(north, t) <= 3) { z = t; break; } }
+  const minTx = tx(west, z), minTy = ty(north, z), spanX = Math.max(tx(east, z) - minTx, 0.05), spanY = Math.max(ty(south, z) - minTy, 0.05);
+  const scale = Math.min((W - 2 * pad) / spanX, 260 / spanY, 512);   // screen units per tile
+  const H = Math.max(180, spanY * scale + 2 * pad);
+  const offX = (W - spanX * scale) / 2, offY = (H - spanY * scale) / 2;
+  const place = p => ({px: offX + (tx(p.lon, z) - minTx) * scale, py: offY + (ty(p.lat, z) - minTy) * scale});
+  let tiles = '';
+  const n = 2 ** z;
+  for (let x = Math.floor(minTx - offX / scale); x <= Math.floor(minTx + (W - offX) / scale); x++) {
+    for (let y = Math.floor(minTy - offY / scale); y <= Math.floor(minTy + (H - offY) / scale); y++) {
+      if (y < 0 || y >= n) continue;
+      tiles += `<image href="https://tile.openstreetmap.org/${z}/${((x % n) + n) % n}/${y}.png" x="${(offX + (x - minTx) * scale).toFixed(1)}" y="${(offY + (y - minTy) * scale).toFixed(1)}" width="${(scale + 0.8).toFixed(1)}" height="${(scale + 0.8).toFixed(1)}" preserveAspectRatio="none"/>`;
+    }
+  }
+  let s = `<defs><clipPath id="mapclip"><rect width="${W}" height="${H}" rx="8"/></clipPath></defs><rect width="${W}" height="${H}" rx="8" fill="#f4f8f7"/>`
+    + `<g clip-path="url(#mapclip)"><g style="filter:grayscale(1) contrast(.8) brightness(1.1)" opacity=".85">${tiles}</g>`
+    + `<rect x="${W - 150}" y="${H - 16}" width="150" height="16" fill="#fff" opacity=".75"/><text x="${W - 5}" y="${H - 5}" text-anchor="end" font-size="8.5" fill="#444">© OpenStreetMap contributors</text></g>`;
   const placed = pts.map(p => ({...p, ...place(p), r: today.get(p.id)}));
   for (const p of placed.filter(p => p.id !== S.station)) {
     const b = band(p.r?.y);
